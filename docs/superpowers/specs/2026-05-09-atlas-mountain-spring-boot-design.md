@@ -32,6 +32,7 @@ Required checks:
 - Confirm the latest stable Redisson Spring Boot integration works with Spring Boot 4.
 - Confirm ArchUnit works with the selected Java 21 test stack.
 - Confirm Flyway supports the selected MySQL version and Java 21 runtime.
+- Record the verified versions and decisions in an implementation dependency table before feature work starts.
 
 Fallback rules:
 
@@ -204,11 +205,13 @@ Schema changes are managed by Flyway. The first implementation commits `src/main
 
 Initial indexes:
 
-- `sys_user.username` is unique among non-deleted rows.
-- `api_token.token_prefix` is indexed.
-- `api_token.token_hash` is unique among non-deleted rows.
+- `sys_user.username` is globally unique. Usernames are not reused after logical deletion in the first version.
+- `api_token.token_prefix` is globally unique. Prefixes are not reused after logical deletion.
+- `api_token.token_hash` is globally unique. Token hashes are not reused after logical deletion.
 
-Passwords are encoded with BCrypt through Spring Security's `BCryptPasswordEncoder` or an equivalent standalone encoder if Spring Security is not otherwise required. The first local user is created by Flyway seed SQL with a documented development-only password.
+These are plain MySQL unique indexes. The first version avoids active-only uniqueness because it complicates logical deletion semantics and generated schema portability.
+
+Passwords are encoded with BCrypt through `spring-security-crypto`'s `BCryptPasswordEncoder`. The full Spring Security web stack is not introduced only for password hashing. The first local user is created by Flyway seed SQL with a documented development-only password.
 
 API tokens use a split format:
 
@@ -218,7 +221,7 @@ ak_<prefix>_<secret>
 
 Lookup and verification:
 
-- `prefix` is a short public lookup key stored in `api_token.token_prefix`.
+- `prefix` is a short public lookup key stored in unique column `api_token.token_prefix`.
 - `secret` is never stored in plain text.
 - The server hashes the full presented token with SHA-256 and compares it to `api_token.token_hash`.
 - Token comparisons use exact hash matching.
