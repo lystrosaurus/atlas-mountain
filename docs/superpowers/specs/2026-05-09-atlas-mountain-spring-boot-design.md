@@ -41,6 +41,7 @@ Fallback rules:
 - If Sa-Token cannot run cleanly on Spring Boot 4, pause implementation and choose between explicit Sa-Token configuration, Spring Security, or downgrading Spring Boot. Do not silently replace it.
 - If Redisson's starter is incompatible, use `redisson` core with a manually created `RedissonClient` bean.
 - Exact artifact versions must be recorded in `pom.xml` during implementation.
+- The compatibility spike output must be committed as `docs/superpowers/specs/2026-05-09-atlas-mountain-dependency-decisions.md` before feature implementation begins.
 
 ## Architecture
 
@@ -211,7 +212,7 @@ Initial indexes:
 
 These are plain MySQL unique indexes. The first version avoids active-only uniqueness because it complicates logical deletion semantics and generated schema portability.
 
-Passwords are encoded with BCrypt through `spring-security-crypto`'s `BCryptPasswordEncoder`. The full Spring Security web stack is not introduced only for password hashing. The first local user is created by Flyway seed SQL with a documented development-only password.
+Passwords are encoded with BCrypt through `spring-security-crypto`'s `BCryptPasswordEncoder`. The full Spring Security web stack is not introduced only for password hashing. The first local user is created by Flyway seed SQL with a documented development-only password. This seed account is for local development only; README must clearly state that it is not a production bootstrap account and must not be enabled in production deployments.
 
 API tokens use a split format:
 
