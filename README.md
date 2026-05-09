@@ -39,3 +39,31 @@ Default local login:
 - Password: `atlas-local`
 
 This credential is only for local verification. Do not use it in production.
+
+## Verification
+
+Run unit and architecture tests:
+
+```bash
+mvn test
+```
+
+Run locally after MySQL and Redis are available:
+
+```bash
+mvn spring-boot:run
+```
+
+Verify public endpoint:
+
+```bash
+curl http://localhost:8080/api/public/ping
+```
+
+Verify login:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"admin\",\"password\":\"atlas-local\"}"
+```
