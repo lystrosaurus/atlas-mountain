@@ -1,0 +1,16 @@
+package io.github.lystrosaurus.atlasmountain.auth.controller;
+
+import io.github.lystrosaurus.atlasmountain.common.response.ApiResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/open")
+public class OpenPingController {
+
+    @GetMapping("/ping")
+    public ApiResponse<String> ping() {
+        return ApiResponse.success("open-pong");
+    }
+}
