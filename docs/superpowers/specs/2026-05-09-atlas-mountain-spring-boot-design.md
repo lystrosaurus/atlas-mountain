@@ -16,9 +16,30 @@ Atlas Mountain is a new GitHub-hosted Spring Boot application for accumulating r
 - Persistence: MyBatis-Plus
 - Authentication: Sa-Token
 - Redis client: Redisson
+- Schema migration: Flyway
 - Operations: Spring Boot Actuator
 - Layer rules: enforced by ArchUnit tests
 - External integration tests: no Testcontainers in the first version
+
+## Dependency Compatibility
+
+Spring Boot 4 uses the Spring Framework 7 generation, so the first implementation step is a dependency compatibility spike before application code is built.
+
+Required checks:
+
+- Confirm the latest stable MyBatis-Plus artifacts work with Spring Boot 4 and Spring Framework 7.
+- Confirm the latest stable Sa-Token Spring Boot starter works with Spring Boot 4.
+- Confirm the latest stable Redisson Spring Boot integration works with Spring Boot 4.
+- Confirm ArchUnit works with the selected Java 21 test stack.
+- Confirm Flyway supports the selected MySQL version and Java 21 runtime.
+
+Fallback rules:
+
+- If a Spring Boot starter is not Boot 4 compatible, use the library's plain core artifact and create explicit Spring configuration in `config`.
+- If MyBatis-Plus cannot run cleanly on Spring Boot 4, pause implementation and choose between plain MyBatis, Spring Data JDBC, or downgrading Spring Boot. Do not silently replace it.
+- If Sa-Token cannot run cleanly on Spring Boot 4, pause implementation and choose between explicit Sa-Token configuration, Spring Security, or downgrading Spring Boot. Do not silently replace it.
+- If Redisson's starter is incompatible, use `redisson` core with a manually created `RedissonClient` bean.
+- Exact artifact versions must be recorded in `pom.xml` during implementation.
 
 ## Architecture
 
@@ -105,7 +126,7 @@ Controller -> Service -> DAO -> DAO Impl -> Mapper -> Database
 Rules:
 
 - Controllers only handle HTTP input and output. They may depend on services, DTOs, VOs, and common response types.
-- Controllers must not depend on DAO interfaces, DAO implementations, mappers, or entities for direct database work.
+- Controllers must not depend on DAO interfaces, DAO implementations, mappers, or entities.
 - Services contain business workflows. They may depend on DAOs, other services, common types, and infrastructure services.
 - Services must not depend on MyBatis-Plus mappers directly.
 - DAO interfaces define data access operations used by services.
@@ -118,6 +139,7 @@ Rules:
 ArchUnit tests enforce the key dependency rules:
 
 - `..controller..` must not depend on `..dao..` or `..mapper..`.
+- `..controller..` must not depend on `..entity..`.
 - `..service..` must not depend on `..mapper..`.
 - Only `..dao.impl..` may depend on `..mapper..` in feature packages.
 
@@ -166,6 +188,7 @@ The first version does not include a full RBAC system. Role, permission, and men
 
 - `id`
 - `name`
+- `token_prefix`
 - `token_hash`
 - `status`
 - `expires_at`
@@ -176,6 +199,30 @@ The first version does not include a full RBAC system. Role, permission, and men
 - `deleted`
 
 Both tables use MyBatis-Plus logical delete and audit field support.
+
+Schema changes are managed by Flyway. The first implementation commits `src/main/resources/db/migration/V1__init_schema.sql` with the `sys_user` and `api_token` tables, indexes, and seed data required for local login verification.
+
+Initial indexes:
+
+- `sys_user.username` is unique among non-deleted rows.
+- `api_token.token_prefix` is indexed.
+- `api_token.token_hash` is unique among non-deleted rows.
+
+Passwords are encoded with BCrypt through Spring Security's `BCryptPasswordEncoder` or an equivalent standalone encoder if Spring Security is not otherwise required. The first local user is created by Flyway seed SQL with a documented development-only password.
+
+API tokens use a split format:
+
+```text
+ak_<prefix>_<secret>
+```
+
+Lookup and verification:
+
+- `prefix` is a short public lookup key stored in `api_token.token_prefix`.
+- `secret` is never stored in plain text.
+- The server hashes the full presented token with SHA-256 and compares it to `api_token.token_hash`.
+- Token comparisons use exact hash matching.
+- Disabled, expired, missing, or malformed tokens fail with a unified business exception.
 
 ## Initial API Surface
 
