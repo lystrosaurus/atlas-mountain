@@ -1,12 +1,19 @@
 package io.github.lystrosaurus.atlasmountain.integration;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-@AutoConfigureMockMvc
 public abstract class MockMvcIntegrationTest extends IntegrationTestBase {
-    @Autowired protected MockMvc mockMvc;
+    protected MockMvc mockMvc;
     @Autowired protected JdbcTemplate jdbcTemplate;
+    @Autowired private WebApplicationContext context;
+
+    @BeforeEach
+    void setupMockMvc() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+    }
 }

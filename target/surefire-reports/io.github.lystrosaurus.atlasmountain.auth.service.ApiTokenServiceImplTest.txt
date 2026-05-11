@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: io.github.lystrosaurus.atlasmountain.auth.service.ApiTokenServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.166 s -- in io.github.lystrosaurus.atlasmountain.auth.service.ApiTokenServiceImplTest

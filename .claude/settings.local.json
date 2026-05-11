@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(mvn test *)",
+      "Bash(mvn dependency:tree -Dscope=test)",
+      "Bash(Select-String \"spring-boot-test\")",
+      "Bash(mvn clean *)",
+      "Bash(jar tf *)",
+      "Bash(mvn dependency:resolve -U)",
+      "Bash(mvn test-compile *)",
+      "Bash(mysqladmin *)",
+      "Bash(redis-cli ping *)",
+      "Bash(jar xf *)",
+      "Read(//tmp/META-INF/spring/**)",
+      "Read(//c/tmp/**)",
+      "Bash(rm -rf com)",
+      "Bash(timeout 15 mvn spring-boot:run)",
+      "Bash(git stash *)",
+      "Bash(mvn spring-boot:run)",
+      "Bash(git clean *)",
+      "Bash(mysql *)",
+      "Bash(mvn dependency:tree)",
+      "Bash(mvn compile *)"
+    ]
+  }
+}

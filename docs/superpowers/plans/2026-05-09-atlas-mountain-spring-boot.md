@@ -58,6 +58,11 @@ User feature:
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/user/service/UserService.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/user/service/UserServiceImpl.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/user/vo/CurrentUserVo.java`
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/user/controller/UserController.java`
+
+Ops:
+
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/ops/package-info.java`
 
 Auth feature:
 
@@ -83,7 +88,7 @@ Redisson lock:
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/RedissonDistributedLockService.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLockKeyResolver.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLockAspect.java`
-- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/LockDemoController.java`
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller/LockDemoController.java`
 
 Tests:
 
@@ -148,9 +153,9 @@ Create `docs/superpowers/specs/2026-05-09-atlas-mountain-dependency-decisions.md
 
 ## Fallback Decisions
 
-- MyBatis-Plus fallback: pause and ask before replacing with plain MyBatis or Spring Data JDBC.
-- Sa-Token fallback: pause and ask before replacing with Spring Security.
-- Redisson fallback: use `org.redisson:redisson` core and define `RedissonClient` manually.
+- MyBatis-Plus fallback: if `mybatis-plus-spring-boot3-starter` is incompatible with Boot 4, switch to `mybatis-plus` core artifact plus manual `MybatisPlusConfig` (pagination interceptor, `SqlSessionFactory`); pause and ask before replacing with plain MyBatis or Spring Data JDBC.
+- Sa-Token fallback: if `sa-token-spring-boot3-starter` is incompatible with Boot 4, switch to `sa-token-core` plus manual servlet filter / interceptor integration; pause and ask before replacing with Spring Security.
+- Redisson fallback: if `redisson-spring-boot-starter` is incompatible with Boot 4, remove the starter and use `org.redisson:redisson` core with a manually defined `RedissonClient` bean in `config.RedissonConfig`.
 ```
 
 Change `Decision` from `Candidate` to `Use` only after the local Maven verification in this task passes. If verification fails, record the fallback decision in the same table.
@@ -195,6 +200,10 @@ Create `pom.xml` using the verified versions:
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -286,10 +295,10 @@ class DependencyDecisionTest {
 Run:
 
 ```bash
-mvn test
+mvn compile
 ```
 
-Expected: Maven resolves dependencies and tests pass. If dependency resolution fails due to Boot 4 compatibility, update the decision document and `pom.xml` using the fallback rules before continuing.
+Expected: Maven resolves all dependencies and compilation succeeds. If dependency resolution fails due to Boot 4 compatibility, update the decision document and `pom.xml` using the fallback rules before continuing.
 
 - [ ] **Step 6: Commit**
 
@@ -306,8 +315,10 @@ git commit -m "chore: initialize spring boot dependency baseline"
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/AtlasMountainApplication.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/config/WebConfig.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/config/JacksonConfig.java`
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/ops/package-info.java`
 - Create: `src/main/resources/application.yml`
 - Create: `src/main/resources/application-local.yml`
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/web/log/RequestLogFilter.java`
 - Modify: `README.md`
 
 - [ ] **Step 1: Create the application entry point**
@@ -329,7 +340,61 @@ public class AtlasMountainApplication {
 }
 ```
 
-- [ ] **Step 2: Create basic config classes**
+- [ ] **Step 2: Add request log filter**
+
+Create `RequestLogFilter.java`:
+
+```java
+package io.github.lystrosaurus.atlasmountain.web.log;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
+
+import java.io.IOException;
+
+@Component
+public class RequestLogFilter implements Filter {
+
+    private static final Logger log = LoggerFactory.getLogger(RequestLogFilter.class);
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        if (!(request instanceof HttpServletRequest httpRequest) || !(response instanceof HttpServletResponse httpResponse)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(httpRequest);
+        ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(httpResponse);
+
+        long start = System.currentTimeMillis();
+        try {
+            chain.doFilter(wrappedRequest, wrappedResponse);
+        } finally {
+            long duration = System.currentTimeMillis() - start;
+            log.info("{} {} {} - {}ms",
+                    wrappedRequest.getMethod(),
+                    wrappedRequest.getRequestURI(),
+                    wrappedResponse.getStatus(),
+                    duration);
+            wrappedResponse.copyBodyToResponse();
+        }
+    }
+}
+```
+
+- [ ] **Step 3: Create basic config classes**
 
 Create `WebConfig.java`:
 
@@ -364,7 +429,17 @@ public class JacksonConfig {
 }
 ```
 
-- [ ] **Step 3: Create application configuration**
+- [ ] **Step 4: Create ops package placeholder**
+
+Create `src/main/java/io/github/lystrosaurus/atlasmountain/ops/package-info.java`:
+
+```java
+package io.github.lystrosaurus.atlasmountain.ops;
+```
+
+This package holds operational endpoints and support classes that are not core business features. It is intentionally empty in the first version.
+
+- [ ] **Step 5: Create application configuration**
 
 Create `src/main/resources/application.yml`:
 
@@ -387,7 +462,7 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always
 ```
 
 Create `src/main/resources/application-local.yml`:
@@ -403,12 +478,22 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
-redisson:
-  single-server-config:
-    address: redis://localhost:6379
+  redis:
+    host: localhost
+    port: 6379
 ```
 
-- [ ] **Step 4: Update README local setup**
+- [ ] **Step 5: Create .gitignore for local profiles**
+
+Create `.gitignore`:
+
+```text
+application-local.yml
+```
+
+`application-local.yml` contains developer-specific database credentials and must not be committed.
+
+- [ ] **Step 6: Update README local setup**
 
 Replace `README.md` with:
 
@@ -449,20 +534,20 @@ mvn spring-boot:run
 Flyway creates a local development user for login verification. This account is only for local development. It is not a production bootstrap account and must not be enabled in production deployments.
 ````
 
-- [ ] **Step 5: Run build verification**
+- [ ] **Step 6: Run build verification**
 
 Run:
 
 ```bash
-mvn test
+mvn compile
 ```
 
-Expected: PASS. The app may not start without MySQL/Redis yet; this task verifies compile and tests only.
+Expected: PASS. The app may not start without MySQL/Redis yet; this task verifies compilation only.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add README.md src/main/java/io/github/lystrosaurus/atlasmountain src/main/resources/application.yml src/main/resources/application-local.yml
+git add README.md src/main/java/io/github/lystrosaurus/atlasmountain src/main/resources/application.yml .gitignore
 git commit -m "feat: add spring boot application skeleton"
 ```
 
@@ -685,7 +770,7 @@ public class GlobalExceptionHandler {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [ ] **Step 6: Run tests**
 
 Run:
 
@@ -695,7 +780,7 @@ mvn test -Dtest=ApiResponseTest,GlobalExceptionHandlerTest
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/main/java/io/github/lystrosaurus/atlasmountain/common src/main/java/io/github/lystrosaurus/atlasmountain/web src/test/java/io/github/lystrosaurus/atlasmountain/common src/test/java/io/github/lystrosaurus/atlasmountain/web
@@ -1477,7 +1562,56 @@ Run:
 mvn test -Dtest=ApiTokenServiceImplTest,AuthServiceImplTest
 ```
 
-Expected: API token tests pass. If `AuthServiceImplTest` is not practical because Sa-Token static context needs an integration setup, write a narrow test for password mismatch with mocked `UserService` and assert it throws before `StpUtil.login`.
+Expected: API token tests pass. `AuthServiceImplTest` tests password mismatch with a mocked `UserService` and asserts `BusinessException` is thrown before `StpUtil.login` is reached. Sa-Token static context is not exercised in unit tests.
+
+Create `AuthServiceImplTest.java`:
+
+```java
+package io.github.lystrosaurus.atlasmountain.auth.service;
+
+import io.github.lystrosaurus.atlasmountain.auth.dto.LoginRequest;
+import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
+import io.github.lystrosaurus.atlasmountain.user.entity.UserEntity;
+import io.github.lystrosaurus.atlasmountain.user.service.UserService;
+import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class AuthServiceImplTest {
+
+    @Test
+    void loginWithWrongPasswordThrowsUnauthorized() {
+        UserService userService = mock(UserService.class);
+        UserEntity user = new UserEntity();
+        user.setUsername("admin");
+        user.setPasswordHash("$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqhmM6JGKpS4G3R1G2JH8YpfB0Bqy");
+        user.setStatus("ENABLED");
+        when(userService.findLoginUser("admin")).thenReturn(Optional.of(user));
+
+        AuthService authService = new AuthServiceImpl(userService);
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("admin", "wrong-password")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("unauthorized");
+    }
+
+    @Test
+    void loginWithUnknownUserThrowsUnauthorized() {
+        UserService userService = mock(UserService.class);
+        when(userService.findLoginUser("unknown")).thenReturn(Optional.empty());
+
+        AuthService authService = new AuthServiceImpl(userService);
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("unknown", "any-password")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("unauthorized");
+    }
+}
+```
 
 - [ ] **Step 6: Commit**
 
@@ -1496,6 +1630,7 @@ git commit -m "feat: add lightweight auth services"
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller/PublicPingController.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller/OpenPingController.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller/AppPingController.java`
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/user/controller/UserController.java`
 
 - [ ] **Step 1: Configure Sa-Token route checks**
 
@@ -1562,6 +1697,12 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<LoginVo> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(authService.login(request));
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout() {
+        authService.logout();
+        return ApiResponse.success();
     }
 }
 ```
@@ -1631,6 +1772,31 @@ public class AppPingController {
     public ApiResponse<String> ping() {
         return ApiResponse.success("app-pong");
     }
+}
+```
+
+Create `UserController.java`:
+
+```java
+package io.github.lystrosaurus.atlasmountain.user.controller;
+
+import cn.dev33.satoken.stp.StpUtil;
+import io.github.lystrosaurus.atlasmountain.common.response.ApiResponse;
+import io.github.lystrosaurus.atlasmountain.user.service.UserService;
+import io.github.lystrosaurus.atlasmountain.user.vo.CurrentUserVo;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/app")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/me")
     public ApiResponse<CurrentUserVo> me() {
@@ -1652,7 +1818,7 @@ Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/main/java/io/github/lystrosaurus/atlasmountain/config/SaTokenConfig.java src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller
+git add src/main/java/io/github/lystrosaurus/atlasmountain/config/SaTokenConfig.java src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller src/main/java/io/github/lystrosaurus/atlasmountain/user/controller
 git commit -m "feat: add authenticated endpoint categories"
 ```
 
@@ -1661,17 +1827,20 @@ git commit -m "feat: add authenticated endpoint categories"
 ### Task 8: Redisson Distributed Lock Capability
 
 **Files:**
-- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/config/RedissonConfig.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLock.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLockService.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/RedissonDistributedLockService.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLockKeyResolver.java`
 - Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLockAspect.java`
-- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis/LockDemoController.java`
+- Create: `src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller/LockDemoController.java`
 - Create: `src/test/java/io/github/lystrosaurus/atlasmountain/infra/redis/DistributedLockKeyResolverTest.java`
 - Create: `src/test/java/io/github/lystrosaurus/atlasmountain/infra/redis/RedissonDistributedLockServiceTest.java`
 
-- [ ] **Step 1: Write key resolver test**
+- [ ] **Step 1: Verify Redisson starter auto-configuration**
+
+No manual `RedissonConfig` is required. The `redisson-spring-boot-starter` (verified in Task 1) auto-configures a `RedissonClient` bean from `spring.redis.*` properties defined in `application-local.yml`.
+
+- [ ] **Step 2: Write key resolver test"
 
 Create `DistributedLockKeyResolverTest.java`:
 
@@ -1698,7 +1867,7 @@ class DistributedLockKeyResolverTest {
 }
 ```
 
-- [ ] **Step 2: Implement lock types**
+- [ ] **Step 3: Implement lock types**
 
 Create `DistributedLock.java`:
 
@@ -1763,7 +1932,7 @@ public class DistributedLockKeyResolver {
 }
 ```
 
-- [ ] **Step 3: Implement Redisson lock service**
+- [ ] **Step 4: Implement Redisson lock service**
 
 Create `RedissonDistributedLockService.java`:
 
@@ -1814,7 +1983,7 @@ public class RedissonDistributedLockService implements DistributedLockService {
 }
 ```
 
-- [ ] **Step 4: Implement aspect and demo controller**
+- [ ] **Step 5: Implement aspect and demo controller**
 
 Create `DistributedLockAspect.java`:
 
@@ -1858,7 +2027,7 @@ public class DistributedLockAspect {
 Create `LockDemoController.java`:
 
 ```java
-package io.github.lystrosaurus.atlasmountain.infra.redis;
+package io.github.lystrosaurus.atlasmountain.auth.controller;
 
 import io.github.lystrosaurus.atlasmountain.common.response.ApiResponse;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -1878,7 +2047,73 @@ public class LockDemoController {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [ ] **Step 6: Write Redisson lock service test**
+
+Create `RedissonDistributedLockServiceTest.java`:
+
+```java
+package io.github.lystrosaurus.atlasmountain.infra.redis;
+
+import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
+import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
+import org.junit.jupiter.api.Test;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
+class RedissonDistributedLockServiceTest {
+
+    @Test
+    void executesActionWhenLockAcquired() throws Exception {
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        RLock lock = mock(RLock.class);
+        when(redissonClient.getLock("test-key")).thenReturn(lock);
+        when(lock.tryLock(1, 5, TimeUnit.SECONDS)).thenReturn(true);
+
+        RedissonDistributedLockService service = new RedissonDistributedLockService(redissonClient);
+        String result = service.execute("test-key", 1, 5, TimeUnit.SECONDS, () -> "done");
+
+        assertThat(result).isEqualTo("done");
+        verify(lock).unlock();
+    }
+
+    @Test
+    void throwsBusinessExceptionWhenLockNotAcquired() throws Exception {
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        RLock lock = mock(RLock.class);
+        when(redissonClient.getLock("busy-key")).thenReturn(lock);
+        when(lock.tryLock(1, 5, TimeUnit.SECONDS)).thenReturn(false);
+
+        RedissonDistributedLockService service = new RedissonDistributedLockService(redissonClient);
+
+        assertThatThrownBy(() -> service.execute("busy-key", 1, 5, TimeUnit.SECONDS, () -> "done"))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).errorCode()).isEqualTo(CommonErrorCode.LOCK_BUSY));
+    }
+
+    @Test
+    void throwsBusinessExceptionWhenInterrupted() throws Exception {
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        RLock lock = mock(RLock.class);
+        when(redissonClient.getLock("interrupt-key")).thenReturn(lock);
+        when(lock.tryLock(1, 5, TimeUnit.SECONDS)).thenThrow(new InterruptedException());
+
+        RedissonDistributedLockService service = new RedissonDistributedLockService(redissonClient);
+
+        assertThatThrownBy(() -> service.execute("interrupt-key", 1, 5, TimeUnit.SECONDS, () -> "done"))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).errorCode()).isEqualTo(CommonErrorCode.LOCK_BUSY));
+        assertThat(Thread.currentThread().isInterrupted()).isTrue();
+    }
+}
+```
+
+- [ ] **Step 7: Run tests**
 
 Run:
 
@@ -1886,12 +2121,12 @@ Run:
 mvn test -Dtest=DistributedLockKeyResolverTest,RedissonDistributedLockServiceTest
 ```
 
-Expected: PASS. Use Mockito for `RedissonDistributedLockServiceTest`; do not require Redis.
+Expected: PASS. `RedissonDistributedLockServiceTest` uses Mockito and does not require a running Redis instance.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis src/test/java/io/github/lystrosaurus/atlasmountain/infra/redis
+git add src/main/java/io/github/lystrosaurus/atlasmountain/infra/redis src/main/java/io/github/lystrosaurus/atlasmountain/auth/controller src/test/java/io/github/lystrosaurus/atlasmountain/infra/redis
 git commit -m "feat: add redisson distributed lock support"
 ```
 
@@ -1936,6 +2171,11 @@ class LayerArchitectureTest {
     static final ArchRule only_dao_impl_depends_on_mappers =
             noClasses().that().resideOutsideOfPackage("..dao.impl..")
                     .should().dependOnClassesThat().resideInAPackage("..mapper..");
+
+    @ArchTest
+    static final ArchRule controllers_do_not_depend_on_entity =
+            noClasses().that().resideInAPackage("..controller..")
+                    .should().dependOnClassesThat().resideInAPackage("..entity..");
 }
 ```
 
@@ -2042,6 +2282,8 @@ Spec coverage:
 - Redisson distributed lock service and annotation: Task 8.
 - No Testcontainers: all tests use unit, MVC, mock, or ArchUnit style only.
 - README seed account warning and local verification: Task 2, Task 4, Task 10.
+- `spring-boot-starter-validation` dependency: Task 1 (pom.xml).
+- `ops` package placeholder: Task 2.
 
 Placeholder scan:
 

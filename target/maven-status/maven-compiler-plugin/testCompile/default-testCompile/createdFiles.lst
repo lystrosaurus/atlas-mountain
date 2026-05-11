@@ -1,0 +1,12 @@
+io\github\lystrosaurus\atlasmountain\integration\MockMvcIntegrationTest.class
+io\github\lystrosaurus\atlasmountain\infra\redis\RedissonDistributedLockServiceTest.class
+io\github\lystrosaurus\atlasmountain\auth\service\AuthServiceImplTest.class
+io\github\lystrosaurus\atlasmountain\web\exception\GlobalExceptionHandlerTest.class
+io\github\lystrosaurus\atlasmountain\integration\RestTemplateIntegrationTest.class
+io\github\lystrosaurus\atlasmountain\common\response\ApiResponseTest.class
+io\github\lystrosaurus\atlasmountain\integration\IntegrationTestBase.class
+io\github\lystrosaurus\atlasmountain\architecture\LayerArchitectureTest.class
+io\github\lystrosaurus\atlasmountain\auth\service\ApiTokenServiceImplTest.class
+io\github\lystrosaurus\atlasmountain\DependencyDecisionTest.class
+io\github\lystrosaurus\atlasmountain\integration\DataSourceCheckTest.class
+io\github\lystrosaurus\atlasmountain\infra\redis\DistributedLockKeyResolverTest.class
