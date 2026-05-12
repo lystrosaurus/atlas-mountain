@@ -74,6 +74,11 @@
             <version>${redisson.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>mysql-binlog-connector-java</artifactId>
+            <version>0.40.3</version>
+        </dependency>
+        <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
         </dependency>
