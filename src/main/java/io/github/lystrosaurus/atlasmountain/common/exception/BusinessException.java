@@ -1,5 +1,8 @@
 package io.github.lystrosaurus.atlasmountain.common.exception;
 
+import lombok.Getter;
+
+@Getter
 public class BusinessException extends RuntimeException {
 
   private final ErrorCode errorCode;

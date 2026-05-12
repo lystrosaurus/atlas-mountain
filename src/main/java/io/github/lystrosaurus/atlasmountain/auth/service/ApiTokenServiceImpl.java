@@ -12,15 +12,16 @@ import io.github.lystrosaurus.atlasmountain.auth.dao.ApiTokenDao;
 import io.github.lystrosaurus.atlasmountain.auth.entity.ApiTokenEntity;
 import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
 import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ApiTokenServiceImpl implements ApiTokenService {
 
-  private final ApiTokenDao apiTokenDao;
+  private static final String TOKEN_PREFIX = "ak_";
+  private static final int TOKEN_PART_COUNT = 3;
 
-  public ApiTokenServiceImpl(ApiTokenDao apiTokenDao) {
-    this.apiTokenDao = apiTokenDao;
-  }
+  private final ApiTokenDao apiTokenDao;
 
   @Override
   public void verify(String token) {
@@ -29,7 +30,7 @@ public class ApiTokenServiceImpl implements ApiTokenService {
         apiTokenDao
             .findByPrefix(prefix)
             .orElseThrow(() -> new BusinessException(CommonErrorCode.UNAUTHORIZED));
-    if (!"ENABLED".equals(apiToken.getStatus())) {
+    if (!ApiTokenEntity.STATUS_ENABLED.equals(apiToken.getStatus())) {
       throw new BusinessException(CommonErrorCode.UNAUTHORIZED);
     }
     if (apiToken.getExpiresAt() != null && apiToken.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -41,11 +42,11 @@ public class ApiTokenServiceImpl implements ApiTokenService {
   }
 
   private String extractPrefix(String token) {
-    if (token == null || !token.startsWith("ak_")) {
+    if (token == null || !token.startsWith(TOKEN_PREFIX)) {
       throw new BusinessException(CommonErrorCode.UNAUTHORIZED);
     }
-    String[] parts = token.split("_", 3);
-    if (parts.length != 3 || parts[1].isBlank() || parts[2].isBlank()) {
+    String[] parts = token.split("_", TOKEN_PART_COUNT);
+    if (parts.length != TOKEN_PART_COUNT || parts[1].isBlank() || parts[2].isBlank()) {
       throw new BusinessException(CommonErrorCode.UNAUTHORIZED);
     }
     return parts[1];
