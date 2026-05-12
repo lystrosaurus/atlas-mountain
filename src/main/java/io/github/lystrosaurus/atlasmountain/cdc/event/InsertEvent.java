@@ -3,6 +3,7 @@ package io.github.lystrosaurus.atlasmountain.cdc.event;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
+
 import lombok.Getter;
 
 @Getter

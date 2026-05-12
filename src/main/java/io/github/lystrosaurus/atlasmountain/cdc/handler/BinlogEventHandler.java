@@ -6,7 +6,10 @@ import io.github.lystrosaurus.atlasmountain.cdc.event.UpdateEvent;
 
 public interface BinlogEventHandler {
   void onInsert(InsertEvent event);
+
   void onUpdate(UpdateEvent event);
+
   void onDelete(DeleteEvent event);
+
   boolean supports(String database, String table);
 }

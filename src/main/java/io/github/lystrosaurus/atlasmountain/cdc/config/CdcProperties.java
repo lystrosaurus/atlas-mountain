@@ -1,8 +1,10 @@
 package io.github.lystrosaurus.atlasmountain.cdc.config;
 
 import java.util.concurrent.TimeUnit;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 @ConfigurationProperties(prefix = "cdc")
 @Data
