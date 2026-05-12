@@ -1,0 +1,249 @@
+# Atlas Mountain — Agent Guide
+
+> 面向 AI coding agent 的项目速查手册。首次介入请先通读，随后按需查阅。
+
+---
+
+## 项目速览
+
+Spring Boot 4 单体后端模板，Java 21，严格分层（ArchUnit 强制）。
+
+| 项 | 值 |
+|---|---|
+| Group / Artifact | `io.github.lystrosaurus` / `atlas-mountain` |
+| Java / Spring Boot | 21 / 4.0.6 |
+| 端口 | 8080 |
+| 基础包 | `io.github.lystrosaurus.atlasmountain` |
+
+**核心能力**：Sa-Token 会话 + API Token 双认证、用户管理、Redisson 分布式锁、MyBatis-Plus + Flyway。
+
+---
+
+## 常用命令
+
+```bash
+mvn test                          # 全部测试（集成测试需本地 MySQL + Redis）
+mvn test -Dtest="*IntegrationTest" # 仅集成测试
+mvn spotless:apply                # 自动格式化（提交前必须执行）
+mvn spring-boot:run               # 本地启动（需 MySQL + Redis）
+```
+
+---
+
+## 本地服务
+
+- **MySQL**：`atlas_mountain`（开发）、`atlas_mountain_test`（测试），默认 `root`/`root`
+- **Redis**：`localhost:6379`
+- **Profile**：`local`（`application-local.yml`，已存在但理论上应 gitignore）
+
+---
+
+## 代码结构
+
+```
+config    # Spring Bean（Jackson、MyBatis-Plus、Sa-Token、Web）
+common    # ApiResponse<T>、ErrorCode、BusinessException
+web       # GlobalExceptionHandler、RequestLogFilter
+auth      # 认证模块（controller/service/dao/dao.impl/mapper/entity/dto/vo）
+user      # 用户模块（同上结构）
+infra     # persistence（BaseEntity、AuditMetaObjectHandler）、redis（分布式锁）
+ops       # 运维占位
+```
+
+### 包规则
+- 全小写、无下划线；按业务域组织（`auth`、`user`），不按技术层。
+- 每个功能模块固定包含：`controller`、`service`、`dao`、`dao.impl`、`mapper`、`entity`、`dto`、`vo`。
+
+---
+
+## 架构规则（ArchUnit 强制）
+
+```
+Controller -> Service -> DAO -> DAO Impl -> Mapper -> Database
+```
+
+1. **Controller 禁止依赖 DAO、Mapper、Entity**
+2. **Service 禁止直接依赖 Mapper**
+3. **仅 `dao.impl` 可依赖 Mapper**（以及 `config`、`mapper` 包）
+4. **Entity 禁止作为 API 响应** — 必须映射为 VO
+
+新增模块或调整包结构时，**必须同步更新** `LayerArchitectureTest`。
+
+---
+
+## 认证体系
+
+| 前缀 | 认证方式 | 示例 |
+|------|---------|------|
+| `/api/public/**` | 无 | `/api/public/ping` |
+| `/api/open/**` | `X-API-Token` header | `/api/open/ping` |
+| `/api/app/**` | Sa-Token session | `/api/app/ping`, `/api/app/me` |
+
+- **Session**：`StpUtil.login()` / `StpUtil.checkLogin()`，登录端点 `/api/auth/login`
+- **API Token**：SHA-256 哈希存储，格式 `{prefix}.{secret}`
+- **密码**：BCrypt（`spring-security-crypto`，**禁止引入 Spring Security Web 栈**）
+
+> **开发种子账户**：`admin` / `atlas-local`（仅本地，禁止进入生产环境）
+
+---
+
+## API 规范
+
+### 响应格式
+
+```json
+{
+  "code": "0",
+  "message": "success",
+  "data": { ... }
+}
+```
+
+- `code = "0"` → 成功（HTTP 200）
+- `code != "0"` → 业务/系统错误
+- `null` 字段不输出（Jackson `non_null`）
+
+### 错误码格式
+
+```
+CATEGORY_NUMBER
+```
+
+示例：`COMMON_400`、`AUTH_401`、`LOCK_409`。新增错误码放在 `CommonErrorCode` 或模块枚举中。
+
+### HTTP 状态映射
+
+| 场景 | HTTP | code |
+|------|------|------|
+| 成功 | 200 | `0` |
+| 参数校验失败 | 400 | `COMMON_400` |
+| 未认证 | 401 | `COMMON_401` |
+| 无权限 | 403 | `COMMON_403` |
+| 资源不存在 | 404 | `COMMON_404` |
+| 冲突/锁占用 | 409 | `COMMON_409` / `LOCK_409` |
+| 内部错误 | 500 | `COMMON_500` |
+
+---
+
+## 编码约束
+
+### 风格（Spotless 强制执行）
+
+| 规则 | 值 |
+|------|-----|
+| 缩进 | 2 空格 |
+| 换行 | LF |
+| 编码 | UTF-8 无 BOM |
+| 最大行宽 | 120 |
+| 大括号 | K&R |
+| 导入顺序 | `java,javax,jakarta,org,com,` |
+
+### 命名速查
+
+| 类型 | 模式 | 示例 |
+|------|------|------|
+| 接口 | 名词 | `ApiTokenService` |
+| 实现 | 接口 + `Impl` | `ApiTokenServiceImpl` |
+| Controller | 名词 + `Controller` | `AuthController` |
+| Entity | 名词 + `Entity` | `UserEntity` |
+| Mapper | 名词 + `Mapper` | `UserMapper` |
+| DTO | 名词 | `LoginRequest` |
+| VO | 名词 + `Vo` | `LoginVo` |
+| 测试 | 被测类 + `Test` | `AuthServiceImplTest` |
+
+### 方法命名
+
+- 查询：`findXxx`、`getXxx`、`listXxx`
+- 创建：`createXxx` / `saveXxx`
+- 更新：`updateXxx`
+- 删除：`deleteXxx`（硬）/ `removeXxx`（软）
+- 验证：`verifyXxx`、`checkXxx`
+- 布尔：`isXxx`、`hasXxx`
+
+### 编码模式
+
+- **构造器注入**，禁止字段 `@Autowired`
+- **DTO/VO 用 record**，Entity 用 class（MyBatis-Plus 要求）
+- **显式 `public`**，不用 `var`
+- **不用 Lombok**
+- **不用 `System.out.println`**，用 SLF4J
+
+---
+
+## 数据库规范
+
+- 字符集：`utf8mb4`，排序：`utf8mb4_0900_ai_ci`
+- 主键：`BIGINT`，**不自增**（雪花 ID 或业务分配）
+- 软删除：`deleted TINYINT(1) DEFAULT 0` + `@TableLogic`
+- 审计字段（每个表必须）：`created_at`、`created_by`、`updated_at`、`updated_by`、`deleted`
+- 状态字段：`VARCHAR(32)`，值全大写（`ENABLED`、`DISABLED`）
+- 时间字段：`DATETIME`
+- 表名：小写下划线、复数语义（`sys_user`、`api_token`）
+- 索引名：`idx_表名_字段名`、`uk_表名_字段名`
+
+### Flyway
+
+- 位置：`src/main/resources/db/migration/`
+- 命名：`V{version}__{description}.sql`，描述小写下划线
+- **禁止修改已发布脚本**，修正历史问题需新建迁移
+- 本地种子数据允许放在迁移中，但必须标注 `LOCAL-ONLY`
+
+---
+
+## 测试策略
+
+| 类型 | 位置 | 依赖 |
+|------|------|------|
+| 单元 | `.../service/`、`.../web/`、`.../infra/` | 纯 Mockito |
+| MVC | `.../web/` | Spring MVC Test |
+| 架构 | `.../architecture/` | ArchUnit |
+| 集成 | `.../integration/` | MySQL + Redis |
+
+### 集成测试基类
+
+- `IntegrationTestBase`：`@SpringBootTest(RANDOM_PORT)` + `@ActiveProfiles("test")` + Flyway `clean()` + `migrate()`
+- `MockMvcIntegrationTest`：提供 `setSaTokenContext()` 模拟 Sa-Token 上下文 + `sha256()` 辅助方法
+- 测试数据用固定 ID（如 `9991`、`9992`），`@AfterEach` 清理
+
+---
+
+## 安全红线
+
+1. **禁止引入 Spring Security Web 栈**（仅用 `spring-security-crypto`）
+2. **禁止在日志/响应中输出密码、Token、密钥**
+3. **禁止硬编码生产环境凭据**
+4. 开发种子账户仅限本地
+5. API Token 仅比较 SHA-256 哈希，不比较明文
+
+---
+
+## 关键文件速查
+
+| 文件 | 作用 |
+|------|------|
+| `pom.xml` | Maven 依赖与构建配置 |
+| `CODING_STANDARDS.md` | 完整中文编码规范（风格、命名、API、DB、测试、安全） |
+| `CLAUDE.md` | 极简速查（架构、命令、约束） |
+| `.editorconfig` | 编辑器格式规则 |
+| `application.yml` | 基础配置 |
+| `application-local.yml` | 本地开发配置 |
+| `application-test.yml` | 测试配置（随机端口、独立数据库） |
+| `db/migration/V1__init_schema.sql` | 初始 schema + 种子数据 |
+| `LayerArchitectureTest.java` | ArchUnit 分层强制 |
+| `IntegrationTestBase.java` | 集成测试基类 |
+| `MockMvcIntegrationTest.java` | MockMvc + Sa-Token 模拟 |
+
+---
+
+## Agent 行动清单
+
+1. **提交前执行 `mvn spotless:apply`** — 格式错误会导致构建失败
+2. **声称完成前执行 `mvn test`** — 集成测试需本地 MySQL + Redis
+3. **新增模块时镜像 `auth`/`user` 结构**，并更新 ArchUnit 测试
+4. **DTO/VO 用 record，Entity 用 class**
+5. **构造器注入，不用字段注入**
+6. **不引入 Lombok**
+7. **不引入 Spring Security Web 栈**
+8. **Controller 不返回 Entity，必须映射为 VO**
+9. **Service 不绕过 DAO 直接调 Mapper**
+10. **错误码遵循 `CATEGORY_NUMBER` 格式**

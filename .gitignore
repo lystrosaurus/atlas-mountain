@@ -31,7 +31,6 @@ application-local.yml
 tmp-*.xml
 tmp-mp.jar
 cp.txt
-AGENTS.md
 
 # Accidental compile output
 /com/
