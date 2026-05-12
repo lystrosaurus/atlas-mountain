@@ -22,7 +22,7 @@ class ApiTokenServiceImplTest {
     ApiTokenEntity entity = new ApiTokenEntity();
     entity.setTokenPrefix("demo");
     entity.setTokenHash("2392d485a4e225fc68efdbf5bbcc5ee9dc1334da141e9aba791f26cc8b23f525");
-    entity.setStatus("ENABLED");
+    entity.setStatus(ApiTokenEntity.STATUS_ENABLED);
     entity.setExpiresAt(LocalDateTime.now().plusDays(1));
     when(dao.findByPrefix("demo")).thenReturn(Optional.of(entity));
 

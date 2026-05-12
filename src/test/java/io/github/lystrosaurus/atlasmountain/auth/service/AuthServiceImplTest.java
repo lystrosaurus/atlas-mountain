@@ -21,7 +21,7 @@ class AuthServiceImplTest {
     UserEntity user = new UserEntity();
     user.setUsername("admin");
     user.setPasswordHash("$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqhmM6JGKpS4G3R1G2JH8YpfB0Bqy");
-    user.setStatus("ENABLED");
+    user.setStatus(UserEntity.STATUS_ENABLED);
     when(userService.findLoginUser("admin")).thenReturn(Optional.of(user));
 
     AuthService authService = new AuthServiceImpl(userService);
