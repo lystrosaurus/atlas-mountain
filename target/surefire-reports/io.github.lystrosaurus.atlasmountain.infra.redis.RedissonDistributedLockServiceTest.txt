@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: io.github.lystrosaurus.atlasmountain.infra.redis.RedissonDistributedLockServiceTest
--------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.309 s -- in io.github.lystrosaurus.atlasmountain.infra.redis.RedissonDistributedLockServiceTest

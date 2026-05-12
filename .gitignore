@@ -23,3 +23,17 @@
 hs_err_pid*
 replay_pid*
 application-local.yml
+/.idea/
+/.claude/
+/target/
+
+# Temporary debug files
+tmp-*.xml
+tmp-mp.jar
+cp.txt
+AGENTS.md
+
+# Accidental compile output
+/com/
+/META-INF/
+/atlas-mountain.iml
