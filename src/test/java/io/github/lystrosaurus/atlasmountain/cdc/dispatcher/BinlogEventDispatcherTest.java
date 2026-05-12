@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +34,7 @@ class BinlogEventDispatcherTest {
     BinlogEventDispatcher dispatcher = new BinlogEventDispatcher(List.of(handler));
 
     dispatcher.onEvent(createEvent(EventType.TABLE_MAP, createTableMap()));
-    java.util.ArrayList<Serializable[]> rows = new java.util.ArrayList<>();
+    ArrayList<Serializable[]> rows = new ArrayList<>();
     rows.add(new Serializable[] {"alice"});
     dispatcher.onEvent(createEvent(EventType.WRITE_ROWS, createWriteRows(rows)));
 

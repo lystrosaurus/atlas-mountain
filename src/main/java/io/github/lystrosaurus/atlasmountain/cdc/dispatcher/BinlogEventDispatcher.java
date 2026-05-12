@@ -1,11 +1,9 @@
 package io.github.lystrosaurus.atlasmountain.cdc.dispatcher;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.stereotype.Component;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
@@ -24,10 +22,17 @@ import io.github.lystrosaurus.atlasmountain.cdc.handler.BinlogEventHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Component
 public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
 
-  private final Map<Long, TableMapEventData> tableMap = new HashMap<>();
+  private static final int TABLE_MAP_MAX_SIZE = 1000;
+
+  private final Map<Long, TableMapEventData> tableMap =
+      new LinkedHashMap<>() {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Long, TableMapEventData> eldest) {
+          return size() > TABLE_MAP_MAX_SIZE;
+        }
+      };
   private final List<BinlogEventHandler> handlers;
 
   public BinlogEventDispatcher(List<BinlogEventHandler> handlers) {
@@ -122,6 +127,10 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
       } else if (eventData instanceof DeleteRowsEventData data) {
         this.tableId = data.getTableId();
         this.deleteRows = data.getRows();
+      } else {
+        throw new IllegalArgumentException(
+            "Unsupported event data type: "
+                + (eventData != null ? eventData.getClass().getName() : "null"));
       }
     }
 
