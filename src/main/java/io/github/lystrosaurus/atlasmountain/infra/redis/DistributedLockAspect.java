@@ -11,32 +11,38 @@ import org.springframework.stereotype.Component;
 @Component
 public class DistributedLockAspect {
 
-    private final DistributedLockService distributedLockService;
-    private final DistributedLockKeyResolver keyResolver;
+  private final DistributedLockService distributedLockService;
+  private final DistributedLockKeyResolver keyResolver;
 
-    public DistributedLockAspect(DistributedLockService distributedLockService, DistributedLockKeyResolver keyResolver) {
-        this.distributedLockService = distributedLockService;
-        this.keyResolver = keyResolver;
+  public DistributedLockAspect(
+      DistributedLockService distributedLockService, DistributedLockKeyResolver keyResolver) {
+    this.distributedLockService = distributedLockService;
+    this.keyResolver = keyResolver;
+  }
+
+  @Around("@annotation(distributedLock)")
+  public Object around(ProceedingJoinPoint joinPoint, DistributedLock distributedLock) {
+    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+    StandardEvaluationContext context = new StandardEvaluationContext();
+    String[] parameterNames = signature.getParameterNames();
+    Object[] args = joinPoint.getArgs();
+    for (int i = 0; i < parameterNames.length; i++) {
+      context.setVariable(parameterNames[i], args[i]);
     }
-
-    @Around("@annotation(distributedLock)")
-    public Object around(ProceedingJoinPoint joinPoint, DistributedLock distributedLock) {
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        StandardEvaluationContext context = new StandardEvaluationContext();
-        String[] parameterNames = signature.getParameterNames();
-        Object[] args = joinPoint.getArgs();
-        for (int i = 0; i < parameterNames.length; i++) {
-            context.setVariable(parameterNames[i], args[i]);
-        }
-        String key = keyResolver.resolve(distributedLock.key(), context);
-        return distributedLockService.execute(key, distributedLock.waitTime(), distributedLock.leaseTime(), distributedLock.timeUnit(), () -> {
-            try {
-                return joinPoint.proceed();
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+    String key = keyResolver.resolve(distributedLock.key(), context);
+    return distributedLockService.execute(
+        key,
+        distributedLock.waitTime(),
+        distributedLock.leaseTime(),
+        distributedLock.timeUnit(),
+        () -> {
+          try {
+            return joinPoint.proceed();
+          } catch (RuntimeException | Error e) {
+            throw e;
+          } catch (Throwable e) {
+            throw new IllegalStateException(e);
+          }
         });
-    }
+  }
 }

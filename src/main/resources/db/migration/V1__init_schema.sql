@@ -34,7 +34,7 @@ INSERT INTO sys_user (
 ) VALUES (
     1,
     'admin',
-    '$2a$10$9Wigb53vq0SUqjkfGVDGXe6af8QTwslO5M7NYdjfVv.aARqLio2ea',
+    '$2a$10$4NPnJZ2elMZEpQ./DFD4v.cFWYeXvfboH72HFMjLDmJ03MpVQ13A6',
     'Local Admin',
     'ENABLED',
     NOW(),

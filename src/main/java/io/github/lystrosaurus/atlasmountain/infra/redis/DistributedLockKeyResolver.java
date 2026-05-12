@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class DistributedLockKeyResolver {
 
-    private final ExpressionParser parser = new SpelExpressionParser();
-    private final ParserContext parserContext = new TemplateParserContext();
+  private final ExpressionParser parser = new SpelExpressionParser();
+  private final ParserContext parserContext = new TemplateParserContext();
 
-    public String resolve(String expression, StandardEvaluationContext context) {
-        return parser.parseExpression(expression, parserContext).getValue(context, String.class);
-    }
+  public String resolve(String expression, StandardEvaluationContext context) {
+    return parser.parseExpression(expression, parserContext).getValue(context, String.class);
+  }
 }

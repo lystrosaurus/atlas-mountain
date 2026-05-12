@@ -1,8 +1,10 @@
 package io.github.lystrosaurus.atlasmountain.common.exception;
 
-public interface ErrorCode {
+import java.io.Serializable;
 
-    String code();
+public interface ErrorCode extends Serializable {
 
-    String message();
+  String code();
+
+  String message();
 }

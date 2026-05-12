@@ -5,7 +5,7 @@ import io.github.lystrosaurus.atlasmountain.auth.vo.LoginVo;
 
 public interface AuthService {
 
-    LoginVo login(LoginRequest request);
+  LoginVo login(LoginRequest request);
 
-    void logout();
+  void logout();
 }
