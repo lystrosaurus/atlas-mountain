@@ -1,6 +1,8 @@
 package io.github.lystrosaurus.atlasmountain.ops;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -300,9 +302,12 @@ public class CodeGenerator {
       throws Exception {
     Template template = velocity.getTemplate(templatePath, "UTF-8");
     File file = new File(outputPath);
-    file.getParentFile().mkdirs();
+    File parentDir = file.getParentFile();
+    if (parentDir != null && !parentDir.exists() && !parentDir.mkdirs()) {
+      throw new IOException("Failed to create directory: " + parentDir);
+    }
     try (OutputStreamWriter writer =
-        new OutputStreamWriter(new java.io.FileOutputStream(file), StandardCharsets.UTF_8)) {
+        new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
       template.merge(context, writer);
     }
   }

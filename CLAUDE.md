@@ -9,6 +9,27 @@ Atlas Mountain is a Spring Boot 4 single-application backend foundation. Java 21
 - **Base package**: `io.github.lystrosaurus.atlasmountain`
 - **Port**: 8080
 
+## Agent Behavior Principles
+
+Derived from Andrej Karpathy's observations on LLM coding pitfalls. These rules take precedence over speed when they conflict.
+
+### 1. Think Before Coding
+State assumptions explicitly. When uncertain, ask — don't guess. Present alternatives when ambiguity exists. Push back if a simpler path is available.
+
+### 2. Simplicity First
+Minimum code that solves the problem. No speculative features, no abstraction for single-use code, no "flexibility" that wasn't requested. If 200 lines could be 50, rewrite.
+
+### 3. Surgical Changes
+Touch only what you must. Don't "improve" adjacent code, comments, or formatting. Match existing style. Remove only imports / variables / functions that YOUR changes made unused. Mention pre-existing dead code — don't delete it.
+
+### 4. Goal-Driven Execution
+Transform imperative tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a reproducing test, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For this project: state a brief plan for multi-step tasks; run `mvn test` before claiming completion; run `mvn spotless:apply` before committing.
+
 ## Common Commands
 
 ```bash
