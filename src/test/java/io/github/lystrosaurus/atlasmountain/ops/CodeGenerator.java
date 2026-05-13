@@ -19,6 +19,7 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.yaml.snakeyaml.Yaml;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
+import com.baomidou.mybatisplus.generator.config.TemplateType;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
 
 public class CodeGenerator {
@@ -27,6 +28,9 @@ public class CodeGenerator {
     GeneratorConfig config = GeneratorConfig.load();
     System.out.println("Generating code for tables: " + config.tables());
     System.out.println("Output directory: " + config.outputDir());
+    System.out.println("DB URL: " + config.url());
+    System.out.println("DB username: " + config.username());
+    System.out.println("DB password: [" + config.password() + "]");
 
     generateEntityAndMapper(config);
     generateDaoAndDaoImpl(config);
@@ -100,6 +104,7 @@ public class CodeGenerator {
             builder ->
                 builder
                     .addInclude(config.tables())
+                    .addTablePrefix("sys_", "t_", "t_bi_", "tb_")
                     .entityBuilder()
                     .enableTableFieldAnnotation()
                     .enableLombok()
@@ -107,6 +112,7 @@ public class CodeGenerator {
                     .naming(NamingStrategy.underline_to_camel)
                     .columnNaming(NamingStrategy.underline_to_camel)
                     .addIgnoreColumns("created_at", "created_by", "updated_at", "updated_by", "deleted")
+                    .convertFileName(entityName -> entityName + "Entity")
                     .javaTemplate("/templates/entity.java.vm")
                     .mapperBuilder()
                     .enableBaseResultMap()
@@ -116,6 +122,7 @@ public class CodeGenerator {
                     .disable()
                     .controllerBuilder()
                     .disable())
+        .templateConfig(builder -> builder.disable(TemplateType.XML))
         .execute();
   }
 
