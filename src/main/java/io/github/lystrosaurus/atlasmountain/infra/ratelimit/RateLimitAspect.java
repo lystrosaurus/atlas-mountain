@@ -26,10 +26,7 @@ public class RateLimitAspect {
   private static final int BUCKET_CACHE_MAX_SIZE = 1000;
 
   private final Cache<String, Bucket> buckets =
-      Caffeine.newBuilder()
-          .maximumSize(BUCKET_CACHE_MAX_SIZE)
-          .expireAfterAccess(Duration.ofHours(1))
-          .build();
+      Caffeine.newBuilder().maximumSize(BUCKET_CACHE_MAX_SIZE).build();
   private final SpelExpressionParser parser = new SpelExpressionParser();
 
   @Around("@annotation(rateLimit)")
@@ -62,7 +59,11 @@ public class RateLimitAspect {
     }
     String[] parameterNames = signature.getParameterNames();
     if (parameterNames == null) {
-      return signature.getDeclaringTypeName() + "." + signature.getName() + ":" + spelKey;
+      throw new IllegalStateException(
+          "Rate limit SpEL resolution requires compiled parameter names for "
+              + signature.getDeclaringTypeName()
+              + "."
+              + signature.getName());
     }
     StandardEvaluationContext context = new StandardEvaluationContext();
     Object[] args = joinPoint.getArgs();
