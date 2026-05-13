@@ -118,19 +118,22 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
     private List<Map.Entry<Serializable[], Serializable[]>> updateRows;
 
     RowMutationData(EventData eventData) {
-      if (eventData instanceof UpdateRowsEventData data) {
-        this.tableId = data.getTableId();
-        this.updateRows = data.getRows();
-      } else if (eventData instanceof WriteRowsEventData data) {
-        this.tableId = data.getTableId();
-        this.insertRows = data.getRows();
-      } else if (eventData instanceof DeleteRowsEventData data) {
-        this.tableId = data.getTableId();
-        this.deleteRows = data.getRows();
-      } else {
-        throw new IllegalArgumentException(
-            "Unsupported event data type: "
-                + (eventData != null ? eventData.getClass().getName() : "null"));
+      switch (eventData) {
+        case UpdateRowsEventData data -> {
+          this.tableId = data.getTableId();
+          this.updateRows = data.getRows();
+        }
+        case WriteRowsEventData data -> {
+          this.tableId = data.getTableId();
+          this.insertRows = data.getRows();
+        }
+        case DeleteRowsEventData data -> {
+          this.tableId = data.getTableId();
+          this.deleteRows = data.getRows();
+        }
+        case null -> throw new IllegalArgumentException("Unsupported event data type: null");
+        default -> throw new IllegalArgumentException(
+            "Unsupported event data type: " + eventData.getClass().getName());
       }
     }
 
