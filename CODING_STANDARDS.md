@@ -90,8 +90,9 @@ io.github.lystrosaurus.atlasmountain
 
 | 类型 | 命名模式 | 示例 |
 |------|---------|------|
-| 接口 | 名词，无后缀 | `ApiTokenService`, `UserDao` |
-| 实现类 | 接口名 + `Impl` | `ApiTokenServiceImpl`, `ApiTokenDaoImpl` |
+| Service | 名词，无后缀 | `AuthService`, `UserService` |
+| DAO 接口 | 名词，无后缀 | `ApiTokenDao`, `UserDao` |
+| DAO 实现类 | 接口名 + `Impl` | `ApiTokenDaoImpl`, `UserDaoImpl` |
 | Controller | 名词 + `Controller` | `AuthController` |
 | 实体 | 名词 + `Entity` | `ApiTokenEntity`, `UserEntity` |
 | Mapper | 名词 + `Mapper` | `ApiTokenMapper` |
@@ -100,7 +101,9 @@ io.github.lystrosaurus.atlasmountain
 | 配置类 | 名词 + `Config` | `SaTokenConfig` |
 | 异常类 | 名词 + `Exception` | `BusinessException` |
 | 错误码枚举 | 名词 | `CommonErrorCode` |
-| 测试类 | 被测类名 + `Test` | `ApiTokenServiceImplTest` |
+| 测试类 | 被测类名 + `Test` | `ApiTokenServiceTest` |
+
+> **Service 为什么不定义接口？** 除非存在多实现需求（如策略模式、A/B 测试），否则单一实现类的接口属于过度设计（YAGNI）。Service 层直接使用类，减少无意义间接层。
 
 ### 2.3 方法命名
 

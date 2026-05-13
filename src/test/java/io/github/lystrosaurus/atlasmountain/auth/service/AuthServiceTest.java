@@ -13,7 +13,7 @@ import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
 import io.github.lystrosaurus.atlasmountain.user.entity.UserEntity;
 import io.github.lystrosaurus.atlasmountain.user.service.UserService;
 
-class AuthServiceImplTest {
+class AuthServiceTest {
 
   @Test
   void loginWithWrongPasswordThrowsUnauthorized() {
@@ -24,7 +24,7 @@ class AuthServiceImplTest {
     user.setStatus(UserEntity.STATUS_ENABLED);
     when(userService.findLoginUser("admin")).thenReturn(Optional.of(user));
 
-    AuthService authService = new AuthServiceImpl(userService);
+    AuthService authService = new AuthService(userService);
     LoginRequest request = new LoginRequest("admin", "wrong-password");
 
     assertThatThrownBy(() -> authService.login(request))
@@ -37,7 +37,7 @@ class AuthServiceImplTest {
     UserService userService = mock(UserService.class);
     when(userService.findLoginUser("unknown")).thenReturn(Optional.empty());
 
-    AuthService authService = new AuthServiceImpl(userService);
+    AuthService authService = new AuthService(userService);
     LoginRequest request = new LoginRequest("unknown", "any-password");
 
     assertThatThrownBy(() -> authService.login(request))
