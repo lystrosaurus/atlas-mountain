@@ -69,9 +69,16 @@ public class RateLimitAspect {
     }
     StandardEvaluationContext context = new StandardEvaluationContext();
     Object[] args = joinPoint.getArgs();
-    for (int i = 0; i < parameterNames.length; i++) {
-      context.setVariable(parameterNames[i], args[i]);
+    if (args != null) {
+      for (int i = 0; i < parameterNames.length; i++) {
+        context.setVariable(parameterNames[i], args[i]);
+      }
     }
-    return parser.parseExpression(spelKey).getValue(context, String.class);
+    String resolvedKey = parser.parseExpression(spelKey).getValue(context, String.class);
+    if (resolvedKey == null) {
+      throw new IllegalStateException(
+          "Rate limit SpEL expression evaluated to null: " + spelKey);
+    }
+    return resolvedKey;
   }
 }
