@@ -1,8 +1,9 @@
 package io.github.lystrosaurus.atlasmountain.ops;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.OutputStreamWriter;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -21,22 +22,25 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.TemplateType;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CodeGenerator {
+
+  private static final List<String> TABLE_PREFIXES = List.of("sys_", "t_", "t_bi_", "tb_");
 
   public static void main(String[] args) throws Exception {
     GeneratorConfig config = GeneratorConfig.load();
-    System.out.println("Generating code for tables: " + config.tables());
-    System.out.println("Output directory: " + config.outputDir());
-    System.out.println("DB URL: " + config.url());
-    System.out.println("DB username: " + config.username());
-    System.out.println("DB password: [" + config.password() + "]");
+    log.info("Generating code for tables: {}", config.tables());
+    log.info("Output directory: {}", config.outputDir());
+    log.info("DB URL: {}", config.url());
+    log.info("DB username: {}", config.username());
 
     generateEntityAndMapper(config);
     generateDaoAndDaoImpl(config);
 
-    System.out.println("Code generation completed.");
-    System.out.println("Please review files in: " + config.outputDir());
+    log.info("Code generation completed.");
+    log.info("Please review files in: {}", config.outputDir());
   }
 
   // ===== Configuration =====
@@ -104,7 +108,7 @@ public class CodeGenerator {
             builder ->
                 builder
                     .addInclude(config.tables())
-                    .addTablePrefix("sys_", "t_", "t_bi_", "tb_")
+                    .addTablePrefix(TABLE_PREFIXES.toArray(new String[0]))
                     .entityBuilder()
                     .enableTableFieldAnnotation()
                     .enableLombok()
@@ -260,7 +264,7 @@ public class CodeGenerator {
 
   private static String toClassName(String tableName) {
     String withoutPrefix = tableName;
-    for (String prefix : List.of("sys_", "t_", "t_bi_", "tb_")) {
+    for (String prefix : TABLE_PREFIXES) {
       if (tableName.startsWith(prefix)) {
         withoutPrefix = tableName.substring(prefix.length());
         break;
@@ -297,7 +301,8 @@ public class CodeGenerator {
     Template template = velocity.getTemplate(templatePath, "UTF-8");
     File file = new File(outputPath);
     file.getParentFile().mkdirs();
-    try (FileWriter writer = new FileWriter(file)) {
+    try (OutputStreamWriter writer =
+        new OutputStreamWriter(new java.io.FileOutputStream(file), StandardCharsets.UTF_8)) {
       template.merge(context, writer);
     }
   }
