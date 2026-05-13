@@ -71,7 +71,13 @@ io.github.lystrosaurus.atlasmountain
 │   ├── entity
 │   ├── dto
 │   └── vo
-├── user            # 用户功能模块
+├── user            # 用户功能模块（同 auth 结构，部分模块可能缺少 dto）
+├── cdc             # MySQL binlog CDC（独立于分层架构）
+│   ├── config
+│   ├── engine
+│   ├── dispatcher
+│   ├── handler
+│   └── event
 └── infra           # 基础设施
     ├── persistence
     └── redis
@@ -246,6 +252,10 @@ Controller -> Service -> DAO -> DAO Impl -> Mapper -> Database
 
 以上规则由 `LayerArchitectureTest` 强制执行。如果新增模块或调整包结构导致规则失效，必须同步更新 ArchUnit 测试。
 
+### 5.3 CDC 模块豁免
+
+`cdc` 包不参与 Controller→Service→DAO 分层架构。它由数据库 binlog 事件触发，不处理 HTTP 请求，因此不受上述分层规则约束。
+
 ---
 
 ## 6. 测试规范
@@ -273,13 +283,31 @@ Controller -> Service -> DAO -> DAO Impl -> Mapper -> Database
 ## 7. 日志规范
 
 - 使用 SLF4J + Logback
-- Logger 命名：`private static final Logger log = LoggerFactory.getLogger(Xxx.class);`
+- 推荐使用 `@Slf4j` 注解（见第 8 节 Lombok 规范）
+- 手动声明时：`private static final Logger log = LoggerFactory.getLogger(Xxx.class);`
 - 禁止 `System.out.println` 或 `e.printStackTrace()`
 - 请求日志由 `RequestLogFilter` 统一处理，业务代码不手动打印请求信息
 
 ---
 
-## 8. 安全约束
+## 8. Lombok 使用规范
+
+项目允许有限使用 Lombok，规则如下：
+
+| 场景 | 允许的注解 | 说明 |
+|------|-----------|------|
+| Entity | `@Getter`, `@Setter` | MyBatis-Plus 要求 class，用 Lombok 减少样板代码 |
+| Service 构造器 | `@RequiredArgsConstructor` | 替代手写构造器注入 |
+| 日志 | `@Slf4j` | 替代手写 `LoggerFactory.getLogger(...)` |
+
+**禁止**：
+- DTO/VO 使用 `@Data`、`@Getter`、`@Setter` — DTO/VO 必须是 record
+- 任何类使用 `@Builder`、`@ToString`、`@EqualsAndHashCode`
+- `@Data` 用于 Entity（会生成 `equals`/`hashCode`，可能与 MyBatis-Plus 冲突）
+
+---
+
+## 9. 安全约束
 
 - **禁止**引入 Spring Security Web 栈，仅使用 `spring-security-crypto` 做 BCrypt
 - **禁止**在日志、错误消息、API 响应中输出密码、Token、密钥等敏感信息

@@ -32,7 +32,8 @@ io.github.lystrosaurus.atlasmountain
 ├── common    # ApiResponse, ErrorCode, BusinessException
 ├── web       # Filters, exception handlers
 ├── auth      # Auth feature (controller/service/dao/dao.impl/mapper/entity/dto/vo)
-├── user      # User feature (same structure)
+├── user      # User feature (controller/service/dao/dao.impl/mapper/entity/vo)
+├── cdc       # MySQL binlog CDC (config/engine/dispatcher/handler/event)
 └── infra     # persistence (MyBatis-Plus), redis (Redisson lock)
 ```
 
@@ -41,8 +42,11 @@ io.github.lystrosaurus.atlasmountain
 - Controllers must NOT depend on DAOs/mappers/entities
 - Services must NOT depend on mappers directly
 - Entities must NOT be used as API response contracts
+- `cdc` package is exempt from layer rules — it is triggered by binlog events, not HTTP requests
 
 **Auth**: Three endpoint prefixes — `/api/public/**` (none), `/api/open/**` (X-API-Token), `/api/app/**` (Sa-Token session).
+
+**Lombok**: Allowed for Entity `@Getter`/`@Setter`, `@Slf4j`, `@RequiredArgsConstructor`. DTO/VO must remain plain records.
 
 ## Testing
 
@@ -53,7 +57,7 @@ io.github.lystrosaurus.atlasmountain
 | Arch | `.../architecture/` | ArchUnit |
 | Integration | `.../integration/` | MySQL + Redis |
 
-Integration test base: `IntegrationTestBase` (Flyway clean+migrate per class). MockMvc tests extend `MockMvcIntegrationTest` with `setSaTokenContext()` for Sa-Token mock setup.
+Integration test base: `IntegrationTestBase` (Flyway clean+migrate per class). MockMvc tests extend `MockMvcIntegrationTest` with `mockMvc` and `jdbcTemplate`.
 
 ## Standards
 
@@ -64,4 +68,5 @@ See `CODING_STANDARDS.md` for code style, naming, API design, database, and secu
 - No Spring Security web stack (only `spring-security-crypto` for BCrypt)
 - No DAO bypass — services use DAOs, not mappers
 - No entities in API responses — use VOs
+- Lombok limited to Entity getters/setters, `@Slf4j`, `@RequiredArgsConstructor`
 - Dev seed account (`admin`/`atlas-local`) is **local-only**

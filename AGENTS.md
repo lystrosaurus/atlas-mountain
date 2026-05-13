@@ -32,9 +32,9 @@ mvn spring-boot:run               # 本地启动（需 MySQL + Redis）
 
 ## 本地服务
 
-- **MySQL**：`atlas_mountain`（开发）、`atlas_mountain_test`（测试），默认 `root`/`root`
+- **MySQL**：`atlas_mountain`（开发）、`atlas_mountain_test`（测试），用户 `atlas`/`atlas`（见 README.md 建库脚本）
 - **Redis**：`localhost:6379`
-- **Profile**：`local`（`application-local.yml`，已存在但理论上应 gitignore）
+- **Profile**：`local`（`application-local.yml`，需自行创建，不入库）
 
 ---
 
@@ -45,14 +45,16 @@ config    # Spring Bean（Jackson、MyBatis-Plus、Sa-Token、Web）
 common    # ApiResponse<T>、ErrorCode、BusinessException
 web       # GlobalExceptionHandler、RequestLogFilter
 auth      # 认证模块（controller/service/dao/dao.impl/mapper/entity/dto/vo）
-user      # 用户模块（同上结构）
+user      # 用户模块（controller/service/dao/dao.impl/mapper/entity/vo）
+cdc       # MySQL binlog CDC（config/engine/dispatcher/handler/event）
 infra     # persistence（BaseEntity、AuditMetaObjectHandler）、redis（分布式锁）
 ops       # 运维占位
 ```
 
 ### 包规则
 - 全小写、无下划线；按业务域组织（`auth`、`user`），不按技术层。
-- 每个功能模块固定包含：`controller`、`service`、`dao`、`dao.impl`、`mapper`、`entity`、`dto`、`vo`。
+- 每个功能模块固定包含：`controller`、`service`、`dao`、`dao.impl`、`mapper`、`entity`、`dto`、`vo`（部分早期模块可能缺少 `dto`）。
+- `cdc` 模块不参与 Controller→Service→DAO 分层，由数据库 binlog 事件触发。
 
 ---
 
@@ -165,7 +167,7 @@ CATEGORY_NUMBER
 - **构造器注入**，禁止字段 `@Autowired`
 - **DTO/VO 用 record**，Entity 用 class（MyBatis-Plus 要求）
 - **显式 `public`**，不用 `var`
-- **不用 Lombok**
+- **Lombok**：仅限 Entity 的 `@Getter`/`@Setter`、日志 `@Slf4j`、构造器 `@RequiredArgsConstructor`；DTO/VO 保持 record，禁止 `@Data` 用于 DTO/VO
 - **不用 `System.out.println`**，用 SLF4J
 
 ---
@@ -202,7 +204,7 @@ CATEGORY_NUMBER
 ### 集成测试基类
 
 - `IntegrationTestBase`：`@SpringBootTest(RANDOM_PORT)` + `@ActiveProfiles("test")` + Flyway `clean()` + `migrate()`
-- `MockMvcIntegrationTest`：提供 `setSaTokenContext()` 模拟 Sa-Token 上下文 + `sha256()` 辅助方法
+- `MockMvcIntegrationTest`：提供 `mockMvc` + `jdbcTemplate`，用于端点级集成测试
 - 测试数据用固定 ID（如 `9991`、`9992`），`@AfterEach` 清理
 
 ---
@@ -226,12 +228,12 @@ CATEGORY_NUMBER
 | `CLAUDE.md` | 极简速查（架构、命令、约束） |
 | `.editorconfig` | 编辑器格式规则 |
 | `application.yml` | 基础配置 |
-| `application-local.yml` | 本地开发配置 |
+| `application-local.yml` | 本地开发配置（需自行创建，不入库） |
 | `application-test.yml` | 测试配置（随机端口、独立数据库） |
 | `db/migration/V1__init_schema.sql` | 初始 schema + 种子数据 |
 | `LayerArchitectureTest.java` | ArchUnit 分层强制 |
 | `IntegrationTestBase.java` | 集成测试基类 |
-| `MockMvcIntegrationTest.java` | MockMvc + Sa-Token 模拟 |
+| `MockMvcIntegrationTest.java` | MockMvc + JdbcTemplate 集成测试基类 |
 
 ---
 
@@ -242,7 +244,7 @@ CATEGORY_NUMBER
 3. **新增模块时镜像 `auth`/`user` 结构**，并更新 ArchUnit 测试
 4. **DTO/VO 用 record，Entity 用 class**
 5. **构造器注入，不用字段注入**
-6. **不引入 Lombok**
+6. **Lombok 仅限 Entity `@Getter`/`@Setter`、`@Slf4j`、`@RequiredArgsConstructor`**
 7. **不引入 Spring Security Web 栈**
 8. **Controller 不返回 Entity，必须映射为 VO**
 9. **Service 不绕过 DAO 直接调 Mapper**

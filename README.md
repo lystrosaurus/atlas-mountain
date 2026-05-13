@@ -1,6 +1,14 @@
 # atlas-mountain
 
-Spring Boot foundation application for reusable backend capabilities.
+Spring Boot 4 single-application backend foundation. Java 21, Maven, strict layering (ArchUnit enforced).
+
+## Capabilities
+
+- Sa-Token session + API Token dual authentication
+- User management
+- Redisson distributed locks
+- MyBatis-Plus + Flyway schema management
+- MySQL binlog CDC (Change Data Capture)
 
 ## Baseline
 
@@ -9,6 +17,19 @@ Spring Boot foundation application for reusable backend capabilities.
 - Maven
 - MySQL
 - Redis
+
+## Project Structure
+
+```
+config    # Spring beans (Jackson, MyBatis-Plus, Sa-Token, Web)
+common    # ApiResponse<T>, ErrorCode, BusinessException
+web       # GlobalExceptionHandler, RequestLogFilter
+auth      # Auth module (controller/service/dao/dao.impl/mapper/entity/dto/vo)
+user      # User module (controller/service/dao/dao.impl/mapper/entity/vo)
+cdc       # MySQL binlog CDC (config/engine/dispatcher/handler/event)
+infra     # persistence (BaseEntity, AuditMetaObjectHandler), redis (distributed lock)
+ops       # Operations placeholder
+```
 
 ## Local Services
 
@@ -27,6 +48,14 @@ Run Redis on `localhost:6379`.
 
 ```bash
 mvn spring-boot:run
+```
+
+## Formatting
+
+Spotless enforces code style. Run before committing:
+
+```bash
+mvn spotless:apply
 ```
 
 ## Development Seed Account
