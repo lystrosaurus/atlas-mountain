@@ -301,6 +301,25 @@ CATEGORY_NUMBER
 
 ---
 
+## SonarQube Cloud 工作流程
+
+当用户说 **"看看 SonarQube 上的问题"** 时，执行以下步骤：
+
+1. **拉取开放问题** — 调用 SonarQube Cloud API：
+   ```
+   https://sonarcloud.io/api/issues/search?componentKeys=lystrosaurus_atlas-mountain&ps=500&statuses=OPEN,CONFIRMED&types=BUG,VULNERABILITY,CODE_SMELL
+   ```
+2. **展示结果** — 按严重程度排序（BLOCKER > CRITICAL > MAJOR > MINOR > INFO），表格包含：规则、严重程度、文件、行号、说明。
+3. **等待确认** — 用户说"修复"后再应用修复。
+
+**已知排除项**（不报告）：
+- `secrets:S8215` 在 `V1__init_schema.sql` — 已在 SonarQube Cloud 项目设置中排除（LOCAL-ONLY dev seed password）
+- `plsql:*` 规则在 `*.sql` 文件 — 误报（MySQL 被误识别为 Oracle PL/SQL）
+
+**项目 URL**：https://sonarcloud.io/project/overview?id=lystrosaurus_atlas-mountain
+
+---
+
 ## Agent 行动清单
 
 1. **提交前执行 `mvn spotless:apply`** — 格式错误会导致构建失败
@@ -313,3 +332,4 @@ CATEGORY_NUMBER
 8. **Controller 不返回 Entity，必须映射为 VO**
 9. **Service 不绕过 DAO 直接调 Mapper**
 10. **错误码遵循 `CATEGORY_NUMBER` 格式**
+11. **用户说"看看 SonarQube 上的问题"时** — 调用 SonarQube Cloud API 拉取问题列表，展示给用户确认后再修复
