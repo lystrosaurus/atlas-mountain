@@ -22,6 +22,7 @@ public class GlobalExceptionHandler {
           case "COMMON_403" -> HttpStatus.FORBIDDEN;
           case "COMMON_404" -> HttpStatus.NOT_FOUND;
           case "COMMON_409", "LOCK_409" -> HttpStatus.CONFLICT;
+          case "COMMON_429" -> HttpStatus.TOO_MANY_REQUESTS;
           default -> HttpStatus.BAD_REQUEST;
         };
     return ResponseEntity.status(status)

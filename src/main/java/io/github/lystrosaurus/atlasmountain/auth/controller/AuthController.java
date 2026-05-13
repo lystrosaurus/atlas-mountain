@@ -11,6 +11,7 @@ import io.github.lystrosaurus.atlasmountain.auth.dto.LoginRequest;
 import io.github.lystrosaurus.atlasmountain.auth.service.AuthService;
 import io.github.lystrosaurus.atlasmountain.auth.vo.LoginVo;
 import io.github.lystrosaurus.atlasmountain.common.response.ApiResponse;
+import io.github.lystrosaurus.atlasmountain.infra.ratelimit.RateLimit;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,6 +24,11 @@ public class AuthController {
   }
 
   @PostMapping("/login")
+  @RateLimit(
+      key = "'login:' + #request.username()",
+      capacity = 5,
+      refillPeriodSeconds = 60,
+      refillTokens = 5)
   public ApiResponse<LoginVo> login(@Valid @RequestBody LoginRequest request) {
     return ApiResponse.success(authService.login(request));
   }

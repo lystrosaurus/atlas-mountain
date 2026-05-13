@@ -5,6 +5,10 @@ spring:
     active: local
   jackson:
     default-property-inclusion: non_null
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m
 
 server:
   port: 8080

@@ -6,6 +6,7 @@ public enum CommonErrorCode implements ErrorCode {
   FORBIDDEN("COMMON_403", "forbidden"),
   NOT_FOUND("COMMON_404", "not found"),
   CONFLICT("COMMON_409", "conflict"),
+  TOO_MANY_REQUESTS("COMMON_429", "too many requests"),
   INTERNAL_ERROR("COMMON_500", "internal server error"),
   LOCK_BUSY("LOCK_409", "resource is busy");
 
