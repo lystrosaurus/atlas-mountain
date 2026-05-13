@@ -14,10 +14,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.yaml.snakeyaml.Yaml;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -90,8 +90,6 @@ public class CodeGenerator {
   // ===== Entity and Mapper Generation (MyBatis-Plus) =====
 
   private static void generateEntityAndMapper(GeneratorConfig config) {
-    String packagePath = config.parentPackage() + "." + config.module();
-
     FastAutoGenerator.create(config.url(), config.username(), config.password())
         .globalConfig(
             builder ->
@@ -135,11 +133,11 @@ public class CodeGenerator {
   // ===== DAO and DAO Impl Generation (Custom) =====
 
   private static void generateDaoAndDaoImpl(GeneratorConfig config) throws Exception {
-    VelocityEngine velocity = new VelocityEngine();
-    velocity.setProperty(RuntimeConstants.RESOURCE_LOADERS, "classpath");
-    velocity.setProperty(
+    Properties velocityProps = new Properties();
+    velocityProps.setProperty("resource.loaders", "classpath");
+    velocityProps.setProperty(
         "resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
-    velocity.init();
+    VelocityEngine velocity = new VelocityEngine(velocityProps);
 
     String packagePath = config.parentPackage() + "." + config.module();
 
@@ -210,10 +208,9 @@ public class CodeGenerator {
           continue;
         }
         String typeName = columns.getString("TYPE_NAME");
-        int dataType = columns.getInt("DATA_TYPE");
         int columnSize = columns.getInt("COLUMN_SIZE");
         String colComment = columns.getString("REMARKS");
-        String javaType = toJavaType(typeName, dataType, columnSize);
+        String javaType = toJavaType(typeName, columnSize);
         String propertyName = toCamelCase(columnName);
         boolean isPk = isPrimaryKey(metaData, tableName, columnName);
         fields.add(new FieldInfo(columnName, propertyName, javaType, colComment, isPk));
@@ -245,7 +242,7 @@ public class CodeGenerator {
 
   // ===== Type and Name Conversion =====
 
-  private static String toJavaType(String typeName, int sqlType, int columnSize) {
+  private static String toJavaType(String typeName, int columnSize) {
     return switch (typeName.toUpperCase()) {
       case "BIGINT" -> "Long";
       case "VARCHAR", "CHAR", "TEXT", "LONGTEXT", "MEDIUMTEXT" -> "String";
