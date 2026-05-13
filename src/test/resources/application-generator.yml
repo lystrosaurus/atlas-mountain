@@ -1,0 +1,15 @@
+generator:
+  datasource:
+    url: jdbc:mysql://localhost:3306/atlas_mountain?remarks=true&useInformationSchema=true
+    username: root
+    password: ""
+
+  output-dir: /tmp/generated
+
+  package:
+    parent: io.github.lystrosaurus.atlasmountain
+    module: order
+
+  tables:
+    - sys_order
+    - sys_order_item
