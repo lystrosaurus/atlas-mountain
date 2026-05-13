@@ -50,7 +50,30 @@ class RateLimitAspectTest {
         .hasMessageContaining("too many requests");
   }
 
+  @Test
+  void shouldResolveSpelKeyWithMethodParameters() throws Throwable {
+    ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
+    MethodSignature signature = mock(MethodSignature.class);
+    when(joinPoint.getSignature()).thenReturn(signature);
+    when(signature.getDeclaringTypeName()).thenReturn("TestClass");
+    when(signature.getName()).thenReturn("testMethod");
+    when(signature.getParameterNames()).thenReturn(new String[] {"request"});
+    when(joinPoint.getArgs()).thenReturn(new Object[] {"alice"});
+    when(joinPoint.proceed()).thenReturn("success");
+
+    RateLimit rateLimit = createRateLimit("'login:' + #request", 1, 60, 1);
+
+    assertThat(aspect.around(joinPoint, rateLimit)).isEqualTo("success");
+    assertThatThrownBy(() -> aspect.around(joinPoint, rateLimit))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining("too many requests");
+  }
+
   private RateLimit createRateLimit(long capacity, long period, long tokens) {
+    return createRateLimit("", capacity, period, tokens);
+  }
+
+  private RateLimit createRateLimit(String key, long capacity, long period, long tokens) {
     return new RateLimit() {
       @Override
       public Class<RateLimit> annotationType() {
@@ -59,7 +82,7 @@ class RateLimitAspectTest {
 
       @Override
       public String key() {
-        return "";
+        return key;
       }
 
       @Override

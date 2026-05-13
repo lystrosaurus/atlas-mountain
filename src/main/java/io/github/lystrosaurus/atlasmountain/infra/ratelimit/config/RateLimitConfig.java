@@ -6,9 +6,5 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(RateLimitProperties.class)
-@ConditionalOnProperty(
-    prefix = "ratelimit",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ratelimit", name = "enabled", havingValue = "true")
 public class RateLimitConfig {}

@@ -1,16 +1,17 @@
 package io.github.lystrosaurus.atlasmountain.infra.ratelimit;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -22,16 +23,20 @@ import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
 @Component
 public class RateLimitAspect {
 
-  private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+  private static final int BUCKET_CACHE_MAX_SIZE = 1000;
+
+  private final Cache<String, Bucket> buckets =
+      Caffeine.newBuilder()
+          .maximumSize(BUCKET_CACHE_MAX_SIZE)
+          .expireAfterAccess(Duration.ofHours(1))
+          .build();
   private final SpelExpressionParser parser = new SpelExpressionParser();
-  private final DefaultParameterNameDiscoverer parameterNameDiscoverer =
-      new DefaultParameterNameDiscoverer();
 
   @Around("@annotation(rateLimit)")
   public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
     String key = resolveKey(joinPoint, rateLimit.key());
     Bucket bucket =
-        buckets.computeIfAbsent(
+        buckets.get(
             key,
             k -> {
               Bandwidth bandwidth =
@@ -55,7 +60,7 @@ public class RateLimitAspect {
     if (spelKey == null || spelKey.isBlank()) {
       return signature.getDeclaringTypeName() + "." + signature.getName();
     }
-    String[] parameterNames = parameterNameDiscoverer.getParameterNames(signature.getMethod());
+    String[] parameterNames = signature.getParameterNames();
     if (parameterNames == null) {
       return signature.getDeclaringTypeName() + "." + signature.getName() + ":" + spelKey;
     }
