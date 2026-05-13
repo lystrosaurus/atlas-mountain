@@ -91,3 +91,20 @@ See `CODING_STANDARDS.md` for code style, naming, API design, database, and secu
 - No entities in API responses — use VOs
 - Lombok limited to Entity getters/setters, `@Slf4j`, `@RequiredArgsConstructor`
 - Dev seed account (`admin`/`atlas-local`) is **local-only**
+
+## SonarQube Cloud Workflow
+
+When the user says **"看看 SonarQube 上的问题"** after pushing code, execute this flow:
+
+1. **Fetch open issues** from SonarQube Cloud API:
+   ```
+   https://sonarcloud.io/api/issues/search?componentKeys=lystrosaurus_atlas-mountain&ps=500&statuses=OPEN,CONFIRMED&types=BUG,VULNERABILITY,CODE_SMELL
+   ```
+2. **Present findings** as a severity-sorted table (BLOCKER > CRITICAL > MAJOR > MINOR > INFO)
+3. Wait for user confirmation (e.g., "修复") before applying fixes
+
+**Known exclusions** (do not report these):
+- `secrets:S8215` on `V1__init_schema.sql` — excluded in SonarQube Cloud project settings (LOCAL-ONLY dev seed password)
+- `plsql:*` rules on `*.sql` files — false positives (MySQL misidentified as Oracle PL/SQL)
+
+**Project URL:** https://sonarcloud.io/project/overview?id=lystrosaurus_atlas-mountain
