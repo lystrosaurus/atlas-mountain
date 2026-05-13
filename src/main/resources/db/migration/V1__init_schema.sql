@@ -34,7 +34,6 @@ INSERT INTO sys_user (
 ) VALUES (
     1,
     'admin',
-    -- NOSONAR: LOCAL-ONLY dev seed password (admin/atlas-local)
     '$2a$10$4NPnJZ2elMZEpQ./DFD4v.cFWYeXvfboH72HFMjLDmJ03MpVQ13A6',
     'Local Admin',
     'ENABLED',
