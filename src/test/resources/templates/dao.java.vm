@@ -1,0 +1,14 @@
+package ${packageName}.dao;
+
+import java.util.Optional;
+import ${packageName}.entity.${className}Entity;
+
+#if($!tableComment != "")
+/**
+ * ${tableComment} DAO 接口.
+ */
+#end
+public interface ${className}Dao {
+
+  Optional<${className}Entity> findById(Long id);
+}

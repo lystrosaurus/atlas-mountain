@@ -1,0 +1,12 @@
+package ${package.Mapper};
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import ${package.Entity}.${entity};
+
+#if("$!table.comment" != "")
+/**
+ * $!{table.comment} Mapper 接口.
+ */
+#end
+public interface ${table.mapperName} extends BaseMapper<${entity}> {
+}

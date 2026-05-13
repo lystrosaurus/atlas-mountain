@@ -1,0 +1,30 @@
+package ${package.Entity};
+
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import io.github.lystrosaurus.atlasmountain.infra.persistence.BaseEntity;
+import lombok.Getter;
+import lombok.Setter;
+
+#if("$!table.comment" != "")
+/**
+ * $!{table.comment}.
+ */
+#end
+@TableName("${table.name}")
+@Getter
+@Setter
+public class ${entity} extends BaseEntity {
+
+  @TableId private Long id;
+#foreach($field in ${table.fields})
+#if(!${field.keyFlag})
+#if("$!field.comment" != "")
+  /**
+   * ${field.comment}.
+   */
+#end
+  private ${field.propertyType} ${field.propertyName};
+#end
+#end
+}

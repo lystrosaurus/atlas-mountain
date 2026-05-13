@@ -1,0 +1,27 @@
+package ${packageName}.dao.impl;
+
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
+import ${packageName}.mapper.${className}Mapper;
+import ${packageName}.entity.${className}Entity;
+import ${packageName}.dao.${className}Dao;
+
+#if($!tableComment != "")
+/**
+ * ${tableComment} DAO 实现类.
+ */
+#end
+@Repository
+public class ${className}DaoImpl implements ${className}Dao {
+
+  private final ${className}Mapper ${mapperVariable};
+
+  public ${className}DaoImpl(${className}Mapper ${mapperVariable}) {
+    this.${mapperVariable} = ${mapperVariable};
+  }
+
+  @Override
+  public Optional<${className}Entity> findById(Long id) {
+    return Optional.ofNullable(${mapperVariable}.selectById(id));
+  }
+}
