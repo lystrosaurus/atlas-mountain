@@ -23,6 +23,7 @@
 - **空格**：`if`、`for`、`while`、`switch` 后加空格；运算符两侧加空格
 - **空行**：package 与 import 之间、import 与类声明之间各一个空行
 - **导入**：每个类单独 import，禁止 `import *.*`
+- **废弃 API**：禁止使用 `@Deprecated` 标注的 API；编译期若产生 deprecation 警告必须消除
 - **注解**：方法/类注解每个占一行；参数注解与参数同行
 
 ```java
