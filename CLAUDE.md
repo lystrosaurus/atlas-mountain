@@ -16,8 +16,13 @@ Derived from Andrej Karpathy's observations on LLM coding pitfalls. These rules 
 ### 1. Think Before Coding
 State assumptions explicitly. When uncertain, ask — don't guess. Present alternatives when ambiguity exists. Push back if a simpler path is available.
 
+**Any task must use `sequential-thinking` first** — structured thinking before implementation. Depth scales with complexity:
+- Simple (typo, single-line): 1–2 steps
+- Regular (new endpoint, bug fix): 3–5 steps
+- Complex (cross-module refactor): 5–10 steps
+
 ### 2. Simplicity First
-Minimum code that solves the problem. No speculative features, no abstraction for single-use code, no "flexibility" that wasn't requested. If 200 lines could be 50, rewrite.
+Minimum code that solves the problem. No speculative features, no abstraction for single-use code, no "flexibility" that wasn't requested. If 200 lines could be 50, rewrite. Generalize only after a pattern repeats 3+ times.
 
 ### 3. Surgical Changes
 Touch only what you must. Don't "improve" adjacent code, comments, or formatting. Match existing style. Remove only imports / variables / functions that YOUR changes made unused. Mention pre-existing dead code — don't delete it.
@@ -28,7 +33,7 @@ Transform imperative tasks into verifiable goals:
 - "Fix the bug" → "Write a reproducing test, then make it pass"
 - "Refactor X" → "Ensure tests pass before and after"
 
-For this project: state a brief plan for multi-step tasks; run `mvn test` before claiming completion; run `mvn spotless:apply` before committing.
+For this project: state a brief plan for multi-step tasks; run `mvn test` before claiming completion; run `mvn spotless:apply` before committing. If the same problem fails 3 times in a row, pause and reassess.
 
 ## Common Commands
 
