@@ -1,6 +1,9 @@
 package io.github.lystrosaurus.atlasmountain.cdc.engine;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 
@@ -11,13 +14,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BinlogEngine implements Runnable {
 
-  private BinaryLogClient client;
+  private static final double RETRY_MULTIPLIER = 2.0;
+
   private final CdcProperties cdcProperties;
   private final BinlogEventDispatcher dispatcher;
+  private final AtomicBoolean running;
 
-  public BinlogEngine(CdcProperties cdcProperties, BinlogEventDispatcher dispatcher) {
+  private final AtomicReference<BinaryLogClient> clientRef = new AtomicReference<>();
+
+  public BinlogEngine(
+      CdcProperties cdcProperties, BinlogEventDispatcher dispatcher, AtomicBoolean running) {
     this.cdcProperties = cdcProperties;
     this.dispatcher = dispatcher;
+    this.running = running;
   }
 
   @Override
@@ -27,29 +36,88 @@ public class BinlogEngine implements Runnable {
         cdcProperties.getServerId(),
         cdcProperties.getHost(),
         cdcProperties.getPort());
-    client =
+
+    long retryIntervalMs = cdcProperties.getInitialRetryIntervalMs();
+    int attempt = 0;
+
+    while (running.get()) {
+      attempt++;
+      BinaryLogClient c = createClient();
+      clientRef.set(c);
+
+      boolean connected = false;
+      try {
+        c.connect();
+        log.info("Binlog connection closed normally");
+        retryIntervalMs = cdcProperties.getInitialRetryIntervalMs();
+        attempt = 0;
+        connected = true;
+      } catch (IOException e) {
+        if (running.get()) {
+          log.warn(
+              "Binlog connection failed, retrying in {}ms (attempt={})",
+              retryIntervalMs,
+              attempt,
+              e);
+        }
+      }
+
+      boolean exhausted =
+          !connected
+              && cdcProperties.getMaxRetries() > 0
+              && attempt >= cdcProperties.getMaxRetries();
+      if (exhausted) {
+        log.error("Binlog reconnect exhausted after {} attempts, giving up", attempt);
+      }
+
+      if (!running.get() || exhausted) {
+        break;
+      }
+
+      sleep(retryIntervalMs);
+      retryIntervalMs =
+          Math.min(
+              (long) (retryIntervalMs * RETRY_MULTIPLIER), cdcProperties.getMaxRetryIntervalMs());
+    }
+
+    log.info("Binlog engine thread exiting");
+  }
+
+  public void close() {
+    log.info("Shutting down binlog engine");
+    running.set(false);
+    BinaryLogClient c = clientRef.get();
+    if (c != null) {
+      try {
+        c.disconnect();
+      } catch (IOException e) {
+        log.warn("Failed to close binlog client", e);
+      }
+    }
+  }
+
+  BinaryLogClient createClient() {
+    BinaryLogClient c =
         new BinaryLogClient(
             cdcProperties.getHost(),
             cdcProperties.getPort(),
             cdcProperties.getUsername(),
             cdcProperties.getPassword());
-    client.registerEventListener(dispatcher);
-    client.setKeepAlive(cdcProperties.isKeepAlive());
-    client.setKeepAliveInterval(cdcProperties.getKeepAliveInterval());
-    client.setHeartbeatInterval(cdcProperties.getHeartbeatInterval());
-    client.setConnectTimeout(cdcProperties.getConnectTimeout());
-    client.setServerId(cdcProperties.getServerId());
-    try {
-      client.connect();
-    } catch (IOException e) {
-      log.error("Binlog connection failed", e);
-    }
+    c.registerEventListener(dispatcher);
+    c.setKeepAlive(cdcProperties.isKeepAlive());
+    c.setKeepAliveInterval(cdcProperties.getKeepAliveInterval());
+    c.setHeartbeatInterval(cdcProperties.getHeartbeatInterval());
+    c.setConnectTimeout(cdcProperties.getConnectTimeout());
+    c.setServerId(cdcProperties.getServerId());
+    return c;
   }
 
-  public void close() throws IOException {
-    log.info("Shutting down binlog engine");
-    if (client != null) {
-      client.disconnect();
+  private void sleep(long millis) {
+    try {
+      TimeUnit.MILLISECONDS.sleep(millis);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      log.info("Reconnect sleep interrupted, exiting");
     }
   }
 }

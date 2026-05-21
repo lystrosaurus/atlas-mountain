@@ -1,6 +1,5 @@
 package io.github.lystrosaurus.atlasmountain.cdc.engine;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,29 +14,26 @@ public class EmbeddedEngineExecutorService implements SmartLifecycle {
 
   private final BinlogEngine engine;
   private final ExecutorService executor;
-  private final AtomicBoolean running = new AtomicBoolean(false);
+  private final AtomicBoolean running;
 
-  public EmbeddedEngineExecutorService(BinlogEngine engine) {
+  public EmbeddedEngineExecutorService(BinlogEngine engine, AtomicBoolean running) {
     this.engine = engine;
+    this.running = running;
     this.executor = Executors.newSingleThreadExecutor();
   }
 
   @Override
   public void start() {
     log.info("Starting embedded CDC engine");
-    executor.execute(engine);
     running.set(true);
+    executor.execute(engine);
   }
 
   @Override
   public void stop() {
     log.info("Stopping embedded CDC engine");
     running.set(false);
-    try {
-      engine.close();
-    } catch (IOException e) {
-      log.warn("Failed to close binlog engine", e);
-    }
+    engine.close();
     executor.shutdown();
     try {
       if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {

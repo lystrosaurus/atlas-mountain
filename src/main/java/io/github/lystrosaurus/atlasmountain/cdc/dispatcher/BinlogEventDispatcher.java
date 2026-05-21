@@ -132,8 +132,9 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
           this.deleteRows = data.getRows();
         }
         case null -> throw new IllegalArgumentException("Unsupported event data type: null");
-        default -> throw new IllegalArgumentException(
-            "Unsupported event data type: " + eventData.getClass().getName());
+        default ->
+            throw new IllegalArgumentException(
+                "Unsupported event data type: " + eventData.getClass().getName());
       }
     }
 

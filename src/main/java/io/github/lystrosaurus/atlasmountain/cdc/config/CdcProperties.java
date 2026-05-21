@@ -4,10 +4,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @ConfigurationProperties(prefix = "cdc")
-@Data
+@Getter
+@Setter
 public class CdcProperties {
   private boolean enabled = false;
   private String host = "localhost";
@@ -19,4 +21,9 @@ public class CdcProperties {
   private long keepAliveInterval = TimeUnit.MINUTES.toMillis(1L);
   private long connectTimeout = TimeUnit.SECONDS.toMillis(3L);
   private long heartbeatInterval = TimeUnit.SECONDS.toMillis(6L);
+
+  // reconnect retry
+  private int maxRetries = -1;
+  private long initialRetryIntervalMs = TimeUnit.SECONDS.toMillis(1L);
+  private long maxRetryIntervalMs = TimeUnit.MINUTES.toMillis(1L);
 }

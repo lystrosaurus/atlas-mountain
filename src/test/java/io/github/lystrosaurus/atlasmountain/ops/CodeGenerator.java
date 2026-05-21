@@ -1,8 +1,5 @@
 package io.github.lystrosaurus.atlasmountain.ops;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.generator.FastAutoGenerator;
-import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,12 +15,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.yaml.snakeyaml.Yaml;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.generator.FastAutoGenerator;
+import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CodeGenerator {
@@ -47,18 +50,18 @@ public class CodeGenerator {
   // ===== Configuration =====
 
   record GeneratorConfig(
-    String url,
-    String username,
-    String password,
-    String outputDir,
-    String parentPackage,
-    String module,
-    List<String> tables) {
+      String url,
+      String username,
+      String password,
+      String outputDir,
+      String parentPackage,
+      String module,
+      List<String> tables) {
 
     static GeneratorConfig load() {
       Yaml yaml = new Yaml();
       try (InputStream in =
-        GeneratorConfig.class.getResourceAsStream("/application-generator.yml")) {
+          GeneratorConfig.class.getResourceAsStream("/application-generator.yml")) {
         if (in == null) {
           throw new IllegalStateException("application-generator.yml not found on classpath");
         }
@@ -73,13 +76,13 @@ public class CodeGenerator {
         List<String> tables = (List<String>) gen.get("tables");
 
         return new GeneratorConfig(
-          (String) ds.get("url"),
-          (String) ds.get("username"),
-          (String) ds.get("password"),
-          (String) gen.get("output-dir"),
-          (String) pkg.get("parent"),
-          (String) pkg.get("module"),
-          tables);
+            (String) ds.get("url"),
+            (String) ds.get("username"),
+            (String) ds.get("password"),
+            (String) gen.get("output-dir"),
+            (String) pkg.get("parent"),
+            (String) pkg.get("module"),
+            tables);
       } catch (Exception e) {
         throw new RuntimeException("Failed to load generator config", e);
       }
@@ -90,42 +93,41 @@ public class CodeGenerator {
 
   private static void generateEntityAndMapper(GeneratorConfig config) {
     FastAutoGenerator.create(config.url(), config.username(), config.password())
-      .globalConfig(
-        builder ->
-          builder
-            .author("generator")
-            .outputDir(config.outputDir())
-            .disableOpenDir())
-      .packageConfig(
-        builder ->
-          builder
-            .parent(config.parentPackage())
-            .moduleName(config.module())
-            .entity("entity")
-            .mapper("mapper"))
-      .strategyConfig(
-        builder ->
-          builder
-            .addInclude(config.tables())
-            .addTablePrefix(TABLE_PREFIXES.toArray(new String[0]))
-            .entityBuilder()
-            .enableTableFieldAnnotation()
-            .enableLombok()
-            .idType(IdType.INPUT)
-            .naming(NamingStrategy.underline_to_camel)
-            .columnNaming(NamingStrategy.underline_to_camel)
-            .addIgnoreColumns("created_at", "created_by", "updated_at", "updated_by", "deleted")
-            .convertFileName(entityName -> entityName + "Entity")
-            .javaTemplate("/templates/entity.java.vm")
-            .mapperBuilder()
-            .enableBaseResultMap()
-            .enableBaseColumnList()
-            .mapperTemplate("/templates/mapper.java.vm")
-            .serviceBuilder()
-            .disable()
-            .controllerBuilder()
-            .disable().mapperBuilder().disableMapperXml())
-      .execute();
+        .globalConfig(
+            builder -> builder.author("generator").outputDir(config.outputDir()).disableOpenDir())
+        .packageConfig(
+            builder ->
+                builder
+                    .parent(config.parentPackage())
+                    .moduleName(config.module())
+                    .entity("entity")
+                    .mapper("mapper"))
+        .strategyConfig(
+            builder ->
+                builder
+                    .addInclude(config.tables())
+                    .addTablePrefix(TABLE_PREFIXES.toArray(new String[0]))
+                    .entityBuilder()
+                    .enableTableFieldAnnotation()
+                    .enableLombok()
+                    .idType(IdType.INPUT)
+                    .naming(NamingStrategy.underline_to_camel)
+                    .columnNaming(NamingStrategy.underline_to_camel)
+                    .addIgnoreColumns(
+                        "created_at", "created_by", "updated_at", "updated_by", "deleted")
+                    .convertFileName(entityName -> entityName + "Entity")
+                    .javaTemplate("/templates/entity.java.vm")
+                    .mapperBuilder()
+                    .enableBaseResultMap()
+                    .enableBaseColumnList()
+                    .mapperTemplate("/templates/mapper.java.vm")
+                    .serviceBuilder()
+                    .disable()
+                    .controllerBuilder()
+                    .disable()
+                    .mapperBuilder()
+                    .disableMapperXml())
+        .execute();
   }
 
   // ===== DAO and DAO Impl Generation (Custom) =====
@@ -134,19 +136,20 @@ public class CodeGenerator {
     Properties velocityProps = new Properties();
     velocityProps.setProperty("resource.loaders", "classpath");
     velocityProps.setProperty(
-      "resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
+        "resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
     VelocityEngine velocity = new VelocityEngine(velocityProps);
 
     String packagePath = config.parentPackage() + "." + config.module();
 
     try (Connection conn =
-      DriverManager.getConnection(config.url(), config.username(), config.password())) {
+        DriverManager.getConnection(config.url(), config.username(), config.password())) {
       DatabaseMetaData metaData = conn.getMetaData();
 
       for (String tableName : config.tables()) {
         TableInfo tableInfo = extractTableInfo(metaData, tableName);
         String className = toClassName(tableName);
-        String mapperVariable = className.substring(0, 1).toLowerCase() + className.substring(1) + "Mapper";
+        String mapperVariable =
+            className.substring(0, 1).toLowerCase() + className.substring(1) + "Mapper";
 
         // Generate DAO
         VelocityContext daoContext = new VelocityContext();
@@ -155,12 +158,12 @@ public class CodeGenerator {
         daoContext.put("tableComment", tableInfo.comment());
 
         String daoPath =
-          config.outputDir()
-            + "/"
-            + packagePath.replace('.', '/')
-            + "/dao/"
-            + className
-            + "Dao.java";
+            config.outputDir()
+                + "/"
+                + packagePath.replace('.', '/')
+                + "/dao/"
+                + className
+                + "Dao.java";
         renderTemplate(velocity, "/templates/dao.java.vm", daoContext, daoPath);
 
         // Generate DAO Impl
@@ -171,12 +174,12 @@ public class CodeGenerator {
         implContext.put("tableComment", tableInfo.comment());
 
         String implPath =
-          config.outputDir()
-            + "/"
-            + packagePath.replace('.', '/')
-            + "/dao/impl/"
-            + className
-            + "DaoImpl.java";
+            config.outputDir()
+                + "/"
+                + packagePath.replace('.', '/')
+                + "/dao/impl/"
+                + className
+                + "DaoImpl.java";
         renderTemplate(velocity, "/templates/daoImpl.java.vm", implContext, implPath);
       }
     }
@@ -184,19 +187,19 @@ public class CodeGenerator {
 
   // ===== Table Metadata =====
 
-  record TableInfo(String name, String comment, List<FieldInfo> fields) {
-
-  }
+  record TableInfo(String name, String comment, List<FieldInfo> fields) {}
 
   record FieldInfo(
-    String columnName, String propertyName, String javaType, String comment, boolean primaryKey) {
-
-  }
+      String columnName,
+      String propertyName,
+      String javaType,
+      String comment,
+      boolean primaryKey) {}
 
   private static TableInfo extractTableInfo(DatabaseMetaData metaData, String tableName)
-    throws SQLException {
+      throws SQLException {
     String comment = "";
-    try (ResultSet tables = metaData.getTables(null, null, tableName, new String[]{"TABLE"})) {
+    try (ResultSet tables = metaData.getTables(null, null, tableName, new String[] {"TABLE"})) {
       if (tables.next()) {
         comment = tables.getString("REMARKS");
       }
@@ -224,14 +227,14 @@ public class CodeGenerator {
 
   private static boolean isBaseEntityColumn(String columnName) {
     return "created_at".equals(columnName)
-      || "created_by".equals(columnName)
-      || "updated_at".equals(columnName)
-      || "updated_by".equals(columnName)
-      || "deleted".equals(columnName);
+        || "created_by".equals(columnName)
+        || "updated_at".equals(columnName)
+        || "updated_by".equals(columnName)
+        || "deleted".equals(columnName);
   }
 
-  private static boolean isPrimaryKey(DatabaseMetaData metaData, String tableName, String columnName)
-    throws SQLException {
+  private static boolean isPrimaryKey(
+      DatabaseMetaData metaData, String tableName, String columnName) throws SQLException {
     try (ResultSet pks = metaData.getPrimaryKeys(null, null, tableName)) {
       while (pks.next()) {
         if (columnName.equals(pks.getString("COLUMN_NAME"))) {
@@ -297,8 +300,8 @@ public class CodeGenerator {
   // ===== Template Rendering =====
 
   private static void renderTemplate(
-    VelocityEngine velocity, String templatePath, VelocityContext context, String outputPath)
-    throws Exception {
+      VelocityEngine velocity, String templatePath, VelocityContext context, String outputPath)
+      throws Exception {
     Template template = velocity.getTemplate(templatePath, "UTF-8");
     File file = new File(outputPath);
     File parentDir = file.getParentFile();
@@ -306,7 +309,7 @@ public class CodeGenerator {
       throw new IOException("Failed to create directory: " + parentDir);
     }
     try (OutputStreamWriter writer =
-      new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+        new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
       template.merge(context, writer);
     }
   }

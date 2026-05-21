@@ -1,6 +1,7 @@
 package io.github.lystrosaurus.atlasmountain.cdc.config;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -18,13 +19,20 @@ import io.github.lystrosaurus.atlasmountain.cdc.handler.BinlogEventHandler;
 public class CdcConfig {
 
   @Bean
-  public BinlogEngine binlogEngine(CdcProperties cdcProperties, BinlogEventDispatcher dispatcher) {
-    return new BinlogEngine(cdcProperties, dispatcher);
+  public AtomicBoolean cdcRunning() {
+    return new AtomicBoolean(false);
   }
 
   @Bean
-  public EmbeddedEngineExecutorService embeddedEngineExecutorService(BinlogEngine engine) {
-    return new EmbeddedEngineExecutorService(engine);
+  public BinlogEngine binlogEngine(
+      CdcProperties cdcProperties, BinlogEventDispatcher dispatcher, AtomicBoolean cdcRunning) {
+    return new BinlogEngine(cdcProperties, dispatcher, cdcRunning);
+  }
+
+  @Bean
+  public EmbeddedEngineExecutorService embeddedEngineExecutorService(
+      BinlogEngine engine, AtomicBoolean cdcRunning) {
+    return new EmbeddedEngineExecutorService(engine, cdcRunning);
   }
 
   @Bean

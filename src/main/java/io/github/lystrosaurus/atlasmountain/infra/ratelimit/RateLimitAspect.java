@@ -76,8 +76,7 @@ public class RateLimitAspect {
     }
     String resolvedKey = parser.parseExpression(spelKey).getValue(context, String.class);
     if (resolvedKey == null) {
-      throw new IllegalStateException(
-          "Rate limit SpEL expression evaluated to null: " + spelKey);
+      throw new IllegalStateException("Rate limit SpEL expression evaluated to null: " + spelKey);
     }
     return resolvedKey;
   }
