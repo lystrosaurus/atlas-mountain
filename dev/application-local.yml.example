@@ -32,9 +32,8 @@ cdc:
   enabled: false
   host: localhost
   port: 3306
-  username: root
-  password: root
-  database: atlas_mountain
+  username: atlas
+  password: atlas
   server-id: 1001
   keep-alive: true
   keep-alive-interval: 60000

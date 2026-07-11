@@ -70,7 +70,7 @@ io.github.lystrosaurus.atlasmountain
 - Entities must NOT be used as API response contracts
 - `cdc` package is exempt from layer rules — it is triggered by binlog events, not HTTP requests
 
-**Auth**: `/api/public/**` is public, `/api/open/**` uses `X-API-Token` (`ak_<prefix>_<secret>`), and all other endpoints require a Sa-Token session except explicitly allowed health/login paths.
+**Auth**: `/api/public/**` is public, `/api/open/**` uses `X-API-Token` (`ak_<prefix>_<secret>`), and all other endpoints require a Sa-Token session except login, actuator health, and internal `/error` dispatch.
 
 **Lombok**: Allowed for Entity `@Getter`/`@Setter`, `@Slf4j`, `@RequiredArgsConstructor`. DTO/VO must remain plain records.
 

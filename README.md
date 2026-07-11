@@ -46,6 +46,7 @@ Create a MySQL database:
 CREATE DATABASE atlas_mountain DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE USER 'atlas'@'%' IDENTIFIED BY 'atlas';
 GRANT ALL PRIVILEGES ON atlas_mountain.* TO 'atlas'@'%';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'atlas'@'%';
 FLUSH PRIVILEGES;
 ```
 
