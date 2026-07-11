@@ -118,7 +118,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local # 本地启动（需 MySQL 
 
 - **MySQL**：`atlas_mountain`（开发）、`atlas_mountain_test`（测试），用户 `atlas`/`atlas`（见 README.md 建库脚本）
 - **Redis**：`localhost:6379`
-- **Profile**：`local`（从示例复制到 `config/application-local.yml`，不入库、不打包）
+- **Profile**：`local`（从 `dev/application-local.yml.example` 复制到 `config/application-local.yml`，不入库、不打包）
 
 ---
 
@@ -163,11 +163,12 @@ Controller -> Service -> DAO -> DAO Impl -> Mapper -> Database
 |------|---------|------|
 | `/api/public/**` | 无 | `/api/public/ping` |
 | `/api/open/**` | `X-API-Token` header | `/api/open/ping` |
-| `/api/app/**` | Sa-Token session | `/api/app/ping`, `/api/app/me` |
+| 其余路径 | Sa-Token session | `/api/app/ping`, `/api/app/me` |
 
 - **Session**：`StpUtil.login()` / `StpUtil.checkLogin()`，登录端点 `/api/auth/login`
 - **API Token**：SHA-256 哈希存储，格式 `ak_<prefix>_<secret>`
 - **密码**：BCrypt（`spring-security-crypto`，**禁止引入 Spring Security Web 栈**）
+- **显式放行**：`/api/auth/login`、`/actuator/health`、`/actuator/health/**`；`/error` 仅供内部错误分派
 
 > **开发种子账户**：`admin` / `atlas-local`（仅本地，禁止进入生产环境）
 
@@ -312,11 +313,11 @@ CATEGORY_NUMBER
 | `CLAUDE.md` | 极简速查（架构、命令、约束） |
 | `.editorconfig` | 编辑器格式规则 |
 | `application.yml` | 基础配置 |
-| `application-local.yml.example` | 本地开发配置模板；复制到外部 `config/application-local.yml` |
+| `dev/application-local.yml.example` | 本地开发配置模板；复制到外部 `config/application-local.yml` |
 | `application-test.yml` | 测试配置（随机端口、独立数据库） |
 | `db/migration/V1__init_schema.sql` | 初始 schema；含历史开发种子，后续由 V2 移除 |
 | `db/migration/V2__remove_local_development_account.sql` | 从公共迁移结果移除开发账户 |
-| `db/local/R__local_development_account.sql` | 仅 local/test 加载的开发账户 |
+| `dev/db/local/R__local_development_account.sql` | 仅 local/test 通过 filesystem 位置加载的开发账户，不打包 |
 | `LayerArchitectureTest.java` | ArchUnit 分层强制 |
 | `IntegrationTestBase.java` | 集成测试基类 |
 | `MockMvcIntegrationTest.java` | MockMvc + JdbcTemplate 集成测试基类 |

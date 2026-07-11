@@ -17,14 +17,14 @@ import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 public class MybatisPlusConfig {
 
   @Bean
-  MybatisPlusInterceptor mybatisPlusInterceptor() {
+  public MybatisPlusInterceptor mybatisPlusInterceptor() {
     MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
     interceptor.addInnerInterceptor(new PaginationInnerInterceptor(mySqlDialect()));
     return interceptor;
   }
 
   @Bean
-  MySqlDialect mySqlDialect() {
+  public MySqlDialect mySqlDialect() {
     return new MySqlDialect();
   }
 

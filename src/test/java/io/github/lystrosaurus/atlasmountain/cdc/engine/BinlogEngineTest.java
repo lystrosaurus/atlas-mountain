@@ -109,7 +109,7 @@ class BinlogEngineTest {
   }
 
   @Test
-  void interruptedRetryStopsEngine() throws Exception {
+  public void interruptedRetryStopsEngine() throws Exception {
     properties.setInitialRetryIntervalMs(TimeUnit.SECONDS.toMillis(10));
     BinlogEngine engine = createEngineWithFailingClient(-1);
     Thread thread = new Thread(engine);

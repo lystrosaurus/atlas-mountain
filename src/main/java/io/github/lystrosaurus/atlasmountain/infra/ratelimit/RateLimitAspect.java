@@ -6,10 +6,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -21,12 +19,6 @@ import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
 import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
 
 @Aspect
-@Component
-@ConditionalOnProperty(
-    prefix = "ratelimit",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true)
 public class RateLimitAspect {
 
   private static final int BUCKET_CACHE_MAX_SIZE = 1000;

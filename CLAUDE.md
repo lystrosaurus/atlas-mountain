@@ -48,7 +48,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local # Run locally (needs MySQL 
 
 - **MySQL**: `atlas_mountain` (dev), `atlas_mountain_test` (integration tests)
 - **Redis**: `localhost:6379`
-- **Local profile**: copy the template to external `config/application-local.yml` (gitignored and excluded from Maven resources)
+- **Local profile**: copy `dev/application-local.yml.example` to external `config/application-local.yml` (gitignored and excluded from Maven resources); local-only migrations also live under `dev/` and are not packaged
 
 ## Architecture
 

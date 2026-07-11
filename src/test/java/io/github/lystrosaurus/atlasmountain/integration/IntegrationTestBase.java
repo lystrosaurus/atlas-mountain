@@ -17,11 +17,11 @@ import org.springframework.test.context.ActiveProfiles;
 public abstract class IntegrationTestBase {
 
   @BeforeAll
-  void runFlyway(@Autowired DataSource dataSource) {
+  public void runFlyway(@Autowired DataSource dataSource) {
     Flyway flyway =
         Flyway.configure()
             .cleanDisabled(false)
-            .locations("classpath:db/migration", "classpath:db/local")
+            .locations("classpath:db/migration", "filesystem:dev/db/local")
             .dataSource(dataSource)
             .load();
     flyway.clean();

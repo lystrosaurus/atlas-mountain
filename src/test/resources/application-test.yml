@@ -11,7 +11,7 @@ spring:
     clean-disabled: false
     locations:
       - classpath:db/migration
-      - classpath:db/local
+      - filesystem:dev/db/local
   data:
     redis:
       host: localhost

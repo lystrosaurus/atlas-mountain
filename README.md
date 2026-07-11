@@ -11,6 +11,12 @@ Spring Boot 4 single-application backend foundation. Java 21, Maven, strict laye
 - MyBatis-Plus + Flyway schema management
 - MySQL binlog CDC (Change Data Capture)
 
+## Authentication Boundaries
+
+- `/api/public/**` is unauthenticated.
+- `/api/open/**` requires `X-API-Token` in the `ak_<prefix>_<secret>` format.
+- All other routes require a Sa-Token session, except login, actuator health, and internal error dispatch paths.
+
 ## Baseline
 
 - Java 21
@@ -51,11 +57,12 @@ Keep local credentials outside the build output:
 
 ```bash
 mkdir -p config
-cp src/main/resources/application-local.yml.example config/application-local.yml
+cp dev/application-local.yml.example config/application-local.yml
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-`application-local.yml` is excluded from Maven resources and must not be placed in the packaged classpath.
+The template and local seed migration live under `dev/`; neither is included in the packaged classpath.
+`application-local.yml` is also excluded from Maven resources and must not be placed in the packaged classpath.
 
 ## Formatting
 

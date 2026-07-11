@@ -7,14 +7,23 @@ import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
-class ProductionMigrationIntegrationTest extends IntegrationTestBase {
+@SpringBootTest(properties = "spring.flyway.enabled=false")
+@ActiveProfiles("test")
+public class ProductionMigrationIntegrationTest {
 
-  @Autowired private DataSource dataSource;
+  private final DataSource dataSource;
+
+  @Autowired
+  public ProductionMigrationIntegrationTest(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
 
   @Test
-  void commonMigrationsDoNotCreateDevelopmentAccount() {
+  public void commonMigrationsDoNotCreateDevelopmentAccount() {
     Flyway flyway =
         Flyway.configure()
             .cleanDisabled(false)

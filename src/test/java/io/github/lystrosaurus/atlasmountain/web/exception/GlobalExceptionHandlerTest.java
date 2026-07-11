@@ -28,7 +28,7 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void internalBusinessExceptionMapsToServerError() {
+  public void internalBusinessExceptionMapsToServerError() {
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     ResponseEntity<ApiResponse<Void>> response =
@@ -38,7 +38,7 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void unexpectedExceptionIsLogged(CapturedOutput output) {
+  public void unexpectedExceptionIsLogged(CapturedOutput output) {
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     handler.handleException(new IllegalStateException("unexpected failure"));

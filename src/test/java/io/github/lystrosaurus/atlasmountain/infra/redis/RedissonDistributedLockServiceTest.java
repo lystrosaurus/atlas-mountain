@@ -17,7 +17,7 @@ import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
 class RedissonDistributedLockServiceTest {
 
   @AfterEach
-  void clearInterruptedStatus() {
+  public void clearInterruptedStatus() {
     Thread.interrupted();
   }
 
@@ -37,7 +37,7 @@ class RedissonDistributedLockServiceTest {
   }
 
   @Test
-  void doesNotUnlockWhenLeaseIsNoLongerOwned() throws Exception {
+  public void doesNotUnlockWhenLeaseIsNoLongerOwned() throws Exception {
     RedissonClient redissonClient = mock(RedissonClient.class);
     RLock lock = mock(RLock.class);
     when(redissonClient.getLock("expired-key")).thenReturn(lock);

@@ -16,6 +16,7 @@ import io.github.lystrosaurus.atlasmountain.cdc.engine.EmbeddedEngineExecutorSer
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@MockitoBean(types = EmbeddedEngineExecutorService.class)
 @TestPropertySource(
     properties = {
       "cdc.enabled=true",
@@ -25,15 +26,19 @@ import io.github.lystrosaurus.atlasmountain.cdc.engine.EmbeddedEngineExecutorSer
       "cdc.password=test",
       "cdc.server-id=9999"
     })
-class CdcConfigTest {
+public class CdcConfigTest {
 
-  @Autowired(required = false)
-  private BinlogEngine binlogEngine;
+  private final BinlogEngine binlogEngine;
+  private final EmbeddedEngineExecutorService executorService;
 
-  @MockitoBean private EmbeddedEngineExecutorService executorService;
+  @Autowired
+  public CdcConfigTest(BinlogEngine binlogEngine, EmbeddedEngineExecutorService executorService) {
+    this.binlogEngine = binlogEngine;
+    this.executorService = executorService;
+  }
 
   @Test
-  void beansAreRegisteredWhenCdcEnabled() {
+  public void beansAreRegisteredWhenCdcEnabled() {
     assertThat(binlogEngine).isNotNull();
     assertThat(executorService).isNotNull();
   }

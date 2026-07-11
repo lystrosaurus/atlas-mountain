@@ -14,7 +14,7 @@ spring:
     enabled: true
     locations:
       - classpath:db/migration
-      - classpath:db/local
+      - filesystem:dev/db/local
   data:
     redis:
       host: localhost
@@ -32,15 +32,14 @@ cdc:
   enabled: false
   host: localhost
   port: 3306
-  username: atlas
-  password: atlas
-  server-id: 100
+  username: root
+  password: root
+  database: atlas_mountain
+  server-id: 1001
   keep-alive: true
   keep-alive-interval: 60000
-  heartbeat-interval: 6000
+  heartbeat-interval: 30000
   connect-timeout: 3000
-
-logging:
-  level:
-    root: info
-    io.github.lystrosaurus.atlasmountain: debug
+  max-retries: 10
+  initial-retry-interval-ms: 1000
+  max-retry-interval-ms: 30000
