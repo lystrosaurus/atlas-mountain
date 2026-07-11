@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -14,6 +15,11 @@ import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
 import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
 
 class RedissonDistributedLockServiceTest {
+
+  @AfterEach
+  void clearInterruptedStatus() {
+    Thread.interrupted();
+  }
 
   @Test
   void executesActionWhenLockAcquired() throws Exception {
@@ -28,6 +34,21 @@ class RedissonDistributedLockServiceTest {
 
     assertThat(result).isEqualTo("done");
     verify(lock).unlock();
+  }
+
+  @Test
+  void doesNotUnlockWhenLeaseIsNoLongerOwned() throws Exception {
+    RedissonClient redissonClient = mock(RedissonClient.class);
+    RLock lock = mock(RLock.class);
+    when(redissonClient.getLock("expired-key")).thenReturn(lock);
+    when(lock.tryLock(1, 5, TimeUnit.SECONDS)).thenReturn(true);
+    when(lock.isHeldByCurrentThread()).thenReturn(false);
+
+    RedissonDistributedLockService service = new RedissonDistributedLockService(redissonClient);
+    String result = service.execute("expired-key", 1, 5, TimeUnit.SECONDS, () -> "done");
+
+    assertThat(result).isEqualTo("done");
+    verify(lock, never()).unlock();
   }
 
   @Test

@@ -28,7 +28,14 @@ public class SaTokenConfig implements WebMvcConfigurer {
                   SaRouter.match(
                       "/api/open/**",
                       () -> apiTokenService.verify(SaHolder.getRequest().getHeader("X-API-Token")));
-                  SaRouter.match("/api/app/**", StpUtil::checkLogin);
+                  SaRouter.match("/**")
+                      .notMatch("/api/public/**")
+                      .notMatch("/api/auth/login")
+                      .notMatch("/api/open/**")
+                      .notMatch("/actuator/health")
+                      .notMatch("/actuator/health/**")
+                      .notMatch("/error")
+                      .check(StpUtil::checkLogin);
                 }))
         .addPathPatterns("/**");
   }

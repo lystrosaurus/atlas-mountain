@@ -6,6 +6,12 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: true
+    clean-disabled: false
+    locations:
+      - classpath:db/migration
+      - classpath:db/local
   data:
     redis:
       host: localhost

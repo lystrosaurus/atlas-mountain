@@ -68,6 +68,7 @@ public class BinlogEngine implements Runnable {
               && attempt >= cdcProperties.getMaxRetries();
       if (exhausted) {
         log.error("Binlog reconnect exhausted after {} attempts, giving up", attempt);
+        running.set(false);
       }
 
       if (!running.get() || exhausted) {
@@ -117,6 +118,7 @@ public class BinlogEngine implements Runnable {
       TimeUnit.MILLISECONDS.sleep(millis);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      running.set(false);
       log.info("Reconnect sleep interrupted, exiting");
     }
   }

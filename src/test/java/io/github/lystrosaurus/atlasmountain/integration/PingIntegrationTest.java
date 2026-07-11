@@ -67,6 +67,15 @@ class PingIntegrationTest extends MockMvcIntegrationTest {
   }
 
   @Test
+  void unclassifiedEndpointRequiresSession() throws Exception {
+    setSaTokenContext("/api/unclassified", "GET");
+    mockMvc
+        .perform(get("/api/unclassified"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("COMMON_401"));
+  }
+
+  @Test
   void appPingWithSessionReturnsSuccess() throws Exception {
     setSaTokenContext("/api/auth/login", "POST");
     mockMvc

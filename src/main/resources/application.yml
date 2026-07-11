@@ -1,10 +1,11 @@
 spring:
   application:
     name: atlas-mountain
-  profiles:
-    active: local
   jackson:
     default-property-inclusion: non_null
+  flyway:
+    locations:
+      - classpath:db/migration
   cache:
     type: caffeine
     caffeine:
@@ -20,4 +21,4 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: always
+      show-details: never

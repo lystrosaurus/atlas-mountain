@@ -18,7 +18,12 @@ public abstract class IntegrationTestBase {
 
   @BeforeAll
   void runFlyway(@Autowired DataSource dataSource) {
-    Flyway flyway = Flyway.configure().cleanDisabled(false).dataSource(dataSource).load();
+    Flyway flyway =
+        Flyway.configure()
+            .cleanDisabled(false)
+            .locations("classpath:db/migration", "classpath:db/local")
+            .dataSource(dataSource)
+            .load();
     flyway.clean();
     flyway.migrate();
   }

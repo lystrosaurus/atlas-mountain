@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ratelimit")
 public class RateLimitProperties {
 
-  private boolean enabled = false;
+  private boolean enabled = true;
 
   public boolean isEnabled() {
     return enabled;

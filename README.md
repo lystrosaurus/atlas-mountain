@@ -5,8 +5,9 @@ Spring Boot 4 single-application backend foundation. Java 21, Maven, strict laye
 ## Capabilities
 
 - Sa-Token session + API Token dual authentication
-- User management
+- Login and current-user lookup
 - Redisson distributed locks
+- Bucket4j request rate limiting
 - MyBatis-Plus + Flyway schema management
 - MySQL binlog CDC (Change Data Capture)
 
@@ -46,9 +47,15 @@ Run Redis on `localhost:6379`.
 
 ## Local Run
 
+Keep local credentials outside the build output:
+
 ```bash
-mvn spring-boot:run
+mkdir -p config
+cp src/main/resources/application-local.yml.example config/application-local.yml
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
+
+`application-local.yml` is excluded from Maven resources and must not be placed in the packaged classpath.
 
 ## Formatting
 
@@ -60,7 +67,7 @@ mvn spotless:apply
 
 ## Development Seed Account
 
-Flyway creates a local development user for login verification. This account is only for local development. It is not a production bootstrap account and must not be enabled in production deployments.
+The `local` and `test` profiles load a separate Flyway location that creates a development user for login verification. Common production migrations remove the historical development seed.
 
 Default local login:
 
@@ -80,7 +87,7 @@ mvn test
 Run locally after MySQL and Redis are available:
 
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 Verify public endpoint:

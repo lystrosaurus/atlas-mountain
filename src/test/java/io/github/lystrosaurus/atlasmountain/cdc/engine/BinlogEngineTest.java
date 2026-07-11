@@ -75,6 +75,7 @@ class BinlogEngineTest {
     // engine should exit after maxRetries=3 exhausted
     thread.join(3000);
     assertThat(thread.isAlive()).isFalse();
+    assertThat(running.get()).isFalse();
   }
 
   @Test
@@ -105,6 +106,29 @@ class BinlogEngineTest {
 
     thread.join(2000);
     assertThat(thread.isAlive()).isFalse();
+  }
+
+  @Test
+  void interruptedRetryStopsEngine() throws Exception {
+    properties.setInitialRetryIntervalMs(TimeUnit.SECONDS.toMillis(10));
+    BinlogEngine engine = createEngineWithFailingClient(-1);
+    Thread thread = new Thread(engine);
+    thread.start();
+
+    try {
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .until(() -> thread.getState() == Thread.State.TIMED_WAITING);
+      thread.interrupt();
+      thread.join(1000);
+
+      assertThat(thread.isAlive()).isFalse();
+      assertThat(running.get()).isFalse();
+    } finally {
+      running.set(false);
+      thread.interrupt();
+      thread.join(2000);
+    }
   }
 
   @Test

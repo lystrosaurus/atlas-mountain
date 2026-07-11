@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -120,7 +121,12 @@ class EmbeddedEngineExecutorServiceTest {
         try {
           doAnswer(
                   invocation -> {
-                    new CountDownLatch(1).await();
+                    try {
+                      new CountDownLatch(1).await();
+                    } catch (InterruptedException exception) {
+                      Thread.currentThread().interrupt();
+                      throw new IOException("binlog connection interrupted", exception);
+                    }
                     return null;
                   })
               .when(client)

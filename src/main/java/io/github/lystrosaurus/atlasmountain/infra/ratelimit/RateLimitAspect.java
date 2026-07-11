@@ -22,7 +22,11 @@ import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
 
 @Aspect
 @Component
-@ConditionalOnProperty(prefix = "ratelimit", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(
+    prefix = "ratelimit",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class RateLimitAspect {
 
   private static final int BUCKET_CACHE_MAX_SIZE = 1000;

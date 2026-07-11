@@ -13,8 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
 @Component
 public class RequestLogFilter implements Filter {
@@ -30,22 +28,17 @@ public class RequestLogFilter implements Filter {
       return;
     }
 
-    ContentCachingRequestWrapper wrappedRequest =
-        new ContentCachingRequestWrapper(httpRequest, 1024);
-    ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(httpResponse);
-
     long start = System.currentTimeMillis();
     try {
-      chain.doFilter(wrappedRequest, wrappedResponse);
+      chain.doFilter(httpRequest, httpResponse);
     } finally {
       long duration = System.currentTimeMillis() - start;
       log.info(
           "{} {} {} - {}ms",
-          wrappedRequest.getMethod(),
-          wrappedRequest.getRequestURI(),
-          wrappedResponse.getStatus(),
+          httpRequest.getMethod(),
+          httpRequest.getRequestURI(),
+          httpResponse.getStatus(),
           duration);
-      wrappedResponse.copyBodyToResponse();
     }
   }
 }

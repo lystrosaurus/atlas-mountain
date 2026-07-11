@@ -6,12 +6,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import io.github.lystrosaurus.atlasmountain.cdc.engine.BinlogEngine;
 import io.github.lystrosaurus.atlasmountain.cdc.engine.EmbeddedEngineExecutorService;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @TestPropertySource(
     properties = {
@@ -27,8 +30,7 @@ class CdcConfigTest {
   @Autowired(required = false)
   private BinlogEngine binlogEngine;
 
-  @Autowired(required = false)
-  private EmbeddedEngineExecutorService executorService;
+  @MockitoBean private EmbeddedEngineExecutorService executorService;
 
   @Test
   void beansAreRegisteredWhenCdcEnabled() {

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.MySqlDialect;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 
@@ -17,7 +18,9 @@ public class MybatisPlusConfig {
 
   @Bean
   MybatisPlusInterceptor mybatisPlusInterceptor() {
-    return new MybatisPlusInterceptor();
+    MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+    interceptor.addInnerInterceptor(new PaginationInnerInterceptor(mySqlDialect()));
+    return interceptor;
   }
 
   @Bean

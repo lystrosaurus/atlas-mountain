@@ -40,7 +40,9 @@ public class RedissonDistributedLockService implements DistributedLockService {
     } catch (Exception e) {
       throw new IllegalStateException(e);
     } finally {
-      lock.unlock();
+      if (lock.isHeldByCurrentThread()) {
+        lock.unlock();
+      }
     }
   }
 }

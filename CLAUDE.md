@@ -41,14 +41,14 @@ For this project: state a brief plan for multi-step tasks; run `mvn test` before
 mvn test                          # Run all tests
 mvn test -Dtest="*IntegrationTest" # Run only integration tests
 mvn spotless:apply                # Auto-fix formatting
-mvn spring-boot:run               # Run locally (needs MySQL + Redis)
+mvn spring-boot:run -Dspring-boot.run.profiles=local # Run locally (needs MySQL + Redis)
 ```
 
 ## Local Services
 
 - **MySQL**: `atlas_mountain` (dev), `atlas_mountain_test` (integration tests)
 - **Redis**: `localhost:6379`
-- **Local profile**: `application-local.yml` (gitignored, create your own)
+- **Local profile**: copy the template to external `config/application-local.yml` (gitignored and excluded from Maven resources)
 
 ## Architecture
 
@@ -70,7 +70,7 @@ io.github.lystrosaurus.atlasmountain
 - Entities must NOT be used as API response contracts
 - `cdc` package is exempt from layer rules — it is triggered by binlog events, not HTTP requests
 
-**Auth**: Three endpoint prefixes — `/api/public/**` (none), `/api/open/**` (X-API-Token), `/api/app/**` (Sa-Token session).
+**Auth**: `/api/public/**` is public, `/api/open/**` uses `X-API-Token` (`ak_<prefix>_<secret>`), and all other endpoints require a Sa-Token session except explicitly allowed health/login paths.
 
 **Lombok**: Allowed for Entity `@Getter`/`@Setter`, `@Slf4j`, `@RequiredArgsConstructor`. DTO/VO must remain plain records.
 
@@ -83,7 +83,7 @@ io.github.lystrosaurus.atlasmountain
 | Arch | `.../architecture/` | ArchUnit |
 | Integration | `.../integration/` | MySQL + Redis |
 
-Integration test base: `IntegrationTestBase` (Flyway clean+migrate per class). MockMvc tests extend `MockMvcIntegrationTest` with `mockMvc` and `jdbcTemplate`.
+Integration test base: `IntegrationTestBase` (Flyway clean + common/local migrations per class). MockMvc tests extend `MockMvcIntegrationTest` with `mockMvc` and `jdbcTemplate`.
 
 ## Standards
 
@@ -95,7 +95,7 @@ See `CODING_STANDARDS.md` for code style, naming, API design, database, and secu
 - No DAO bypass — services use DAOs, not mappers
 - No entities in API responses — use VOs
 - Lombok limited to Entity getters/setters, `@Slf4j`, `@RequiredArgsConstructor`
-- Dev seed account (`admin`/`atlas-local`) is **local-only**
+- Dev seed account (`admin`/`atlas-local`) is loaded only from the local/test Flyway location
 
 ## SonarQube Cloud Workflow
 
