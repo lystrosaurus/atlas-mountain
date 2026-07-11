@@ -26,19 +26,19 @@ import io.github.lystrosaurus.atlasmountain.cdc.engine.EmbeddedEngineExecutorSer
       "cdc.password=test",
       "cdc.server-id=9999"
     })
-public class CdcConfigTest {
+class CdcConfigTest {
 
   private final BinlogEngine binlogEngine;
   private final EmbeddedEngineExecutorService executorService;
 
   @Autowired
-  public CdcConfigTest(BinlogEngine binlogEngine, EmbeddedEngineExecutorService executorService) {
+  CdcConfigTest(BinlogEngine binlogEngine, EmbeddedEngineExecutorService executorService) {
     this.binlogEngine = binlogEngine;
     this.executorService = executorService;
   }
 
   @Test
-  public void beansAreRegisteredWhenCdcEnabled() {
+  void beansAreRegisteredWhenCdcEnabled() {
     assertThat(binlogEngine).isNotNull();
     assertThat(executorService).isNotNull();
   }

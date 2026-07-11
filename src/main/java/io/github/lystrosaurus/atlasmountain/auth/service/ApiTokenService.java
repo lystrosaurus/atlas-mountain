@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HexFormat;
 
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ public class ApiTokenService {
     if (!ApiTokenEntity.STATUS_ENABLED.equals(apiToken.getStatus())) {
       throw new BusinessException(CommonErrorCode.UNAUTHORIZED);
     }
-    if (apiToken.getExpiresAt() != null && apiToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+    if (apiToken.getExpiresAt() != null
+        && apiToken.getExpiresAt().isBefore(LocalDateTime.now(ZoneId.systemDefault()))) {
       throw new BusinessException(CommonErrorCode.UNAUTHORIZED);
     }
     if (!sha256(token).equals(apiToken.getTokenHash())) {

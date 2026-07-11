@@ -9,10 +9,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.junit.jupiter.api.Test;
 
-public class RequestLogFilterTest {
+class RequestLogFilterTest {
 
   @Test
-  public void passesOriginalRequestAndResponseToChain() throws Exception {
+  void passesOriginalRequestAndResponseToChain() throws Exception {
     HttpServletRequest request = mock(HttpServletRequest.class);
     HttpServletResponse response = mock(HttpServletResponse.class);
     FilterChain chain = mock(FilterChain.class);

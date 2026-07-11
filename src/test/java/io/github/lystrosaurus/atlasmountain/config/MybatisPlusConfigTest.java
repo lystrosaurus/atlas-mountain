@@ -7,10 +7,10 @@ import org.junit.jupiter.api.Test;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 
-public class MybatisPlusConfigTest {
+class MybatisPlusConfigTest {
 
   @Test
-  public void registersPaginationInterceptor() {
+  void registersPaginationInterceptor() {
     MybatisPlusInterceptor interceptor = new MybatisPlusConfig().mybatisPlusInterceptor();
 
     assertThat(interceptor.getInterceptors())

@@ -18,17 +18,17 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ProductionMigrationIntegrationTest {
+class ProductionMigrationIntegrationTest {
 
   private final DataSource dataSource;
 
   @Autowired
-  public ProductionMigrationIntegrationTest(DataSource dataSource) {
+  ProductionMigrationIntegrationTest(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
   @BeforeAll
-  public void migrateCommonSchema() {
+  void migrateCommonSchema() {
     Flyway flyway =
         Flyway.configure()
             .cleanDisabled(false)
@@ -40,7 +40,7 @@ public class ProductionMigrationIntegrationTest {
   }
 
   @Test
-  public void commonMigrationsDoNotCreateDevelopmentAccount() {
+  void commonMigrationsDoNotCreateDevelopmentAccount() {
     Integer count =
         new JdbcTemplate(dataSource)
             .queryForObject(

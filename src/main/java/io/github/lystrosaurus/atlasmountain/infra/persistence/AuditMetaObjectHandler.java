@@ -1,6 +1,7 @@
 package io.github.lystrosaurus.atlasmountain.infra.persistence;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,7 @@ public class AuditMetaObjectHandler implements MetaObjectHandler {
 
   @Override
   public void insertFill(MetaObject metaObject) {
-    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
     strictInsertFill(metaObject, FIELD_CREATED_AT, LocalDateTime.class, now);
     strictInsertFill(metaObject, FIELD_CREATED_BY, Long.class, SYSTEM_USER_ID);
     strictInsertFill(metaObject, FIELD_UPDATED_AT, LocalDateTime.class, now);
@@ -27,7 +28,11 @@ public class AuditMetaObjectHandler implements MetaObjectHandler {
 
   @Override
   public void updateFill(MetaObject metaObject) {
-    strictUpdateFill(metaObject, FIELD_UPDATED_AT, LocalDateTime.class, LocalDateTime.now());
+    strictUpdateFill(
+        metaObject,
+        FIELD_UPDATED_AT,
+        LocalDateTime.class,
+        LocalDateTime.now(ZoneId.systemDefault()));
     strictUpdateFill(metaObject, FIELD_UPDATED_BY, Long.class, SYSTEM_USER_ID);
   }
 }

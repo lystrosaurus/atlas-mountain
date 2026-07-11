@@ -11,29 +11,30 @@ import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 
-public class RuntimeConfigurationTest {
+class RuntimeConfigurationTest {
 
   @Test
-  public void applicationDoesNotForceLocalProfile() throws Exception {
+  void applicationDoesNotForceLocalProfile() throws Exception {
     YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
     List<PropertySource<?>> propertySources =
         loader.load("application", new ClassPathResource("application.yml"));
 
     assertThat(propertySources)
+        .isNotEmpty()
         .allSatisfy(
             propertySource ->
                 assertThat(propertySource.getProperty("spring.profiles.active")).isNull());
   }
 
   @Test
-  public void buildExcludesLocalConfiguration() throws Exception {
+  void buildExcludesLocalConfiguration() throws Exception {
     String pom = Files.readString(Path.of("pom.xml"));
 
     assertThat(pom).contains("<exclude>application-local.yml</exclude>");
   }
 
   @Test
-  public void developmentResourcesAreNotPackaged() {
+  void developmentResourcesAreNotPackaged() {
     assertThat(new ClassPathResource("application-local.yml.example").exists()).isFalse();
     assertThat(new ClassPathResource("db/local/R__local_development_account.sql").exists())
         .isFalse();
