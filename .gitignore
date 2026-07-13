@@ -25,6 +25,7 @@ replay_pid*
 application-local.yml
 /.idea/
 /.claude/
+/.opencodereview/sessions/
 /target/
 
 # Temporary debug files
