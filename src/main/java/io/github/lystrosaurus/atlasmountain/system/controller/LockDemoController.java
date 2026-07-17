@@ -1,4 +1,4 @@
-package io.github.lystrosaurus.atlasmountain.auth.controller;
+package io.github.lystrosaurus.atlasmountain.system.controller;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

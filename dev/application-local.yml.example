@@ -39,6 +39,6 @@ cdc:
   keep-alive-interval: 60000
   heartbeat-interval: 30000
   connect-timeout: 3000
-  max-retries: 10
+  max-retries: -1  # -1 = infinite retry (code default); set to a positive number for bounded retries
   initial-retry-interval-ms: 1000
   max-retry-interval-ms: 30000

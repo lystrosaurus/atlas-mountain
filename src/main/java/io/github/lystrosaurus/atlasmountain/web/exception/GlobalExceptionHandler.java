@@ -8,7 +8,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import cn.dev33.satoken.exception.DisableServiceException;
 import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
 import io.github.lystrosaurus.atlasmountain.common.exception.BusinessException;
 import io.github.lystrosaurus.atlasmountain.common.exception.CommonErrorCode;
 import io.github.lystrosaurus.atlasmountain.common.response.ApiResponse;
@@ -20,16 +23,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(BusinessException.class)
   public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
-    HttpStatus status =
-        switch (exception.errorCode().code()) {
-          case "COMMON_401" -> HttpStatus.UNAUTHORIZED;
-          case "COMMON_403" -> HttpStatus.FORBIDDEN;
-          case "COMMON_404" -> HttpStatus.NOT_FOUND;
-          case "COMMON_409", "LOCK_409" -> HttpStatus.CONFLICT;
-          case "COMMON_429" -> HttpStatus.TOO_MANY_REQUESTS;
-          case "COMMON_500" -> HttpStatus.INTERNAL_SERVER_ERROR;
-          default -> HttpStatus.BAD_REQUEST;
-        };
+    HttpStatus status = HttpStatus.valueOf(exception.errorCode().httpStatus());
     return ResponseEntity.status(status)
         .body(ApiResponse.failure(exception.errorCode().code(), exception.getMessage()));
   }
@@ -40,6 +34,23 @@ public class GlobalExceptionHandler {
         .body(
             ApiResponse.failure(
                 CommonErrorCode.UNAUTHORIZED.code(), CommonErrorCode.UNAUTHORIZED.message()));
+  }
+
+  @ExceptionHandler({NotRoleException.class, NotPermissionException.class})
+  public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(Exception exception) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .body(
+            ApiResponse.failure(
+                CommonErrorCode.FORBIDDEN.code(), CommonErrorCode.FORBIDDEN.message()));
+  }
+
+  @ExceptionHandler(DisableServiceException.class)
+  public ResponseEntity<ApiResponse<Void>> handleDisableServiceException(
+      DisableServiceException exception) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .body(
+            ApiResponse.failure(
+                CommonErrorCode.FORBIDDEN.code(), CommonErrorCode.FORBIDDEN.message()));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

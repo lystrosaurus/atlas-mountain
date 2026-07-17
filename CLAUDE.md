@@ -56,11 +56,12 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local # Run locally (needs MySQL 
 io.github.lystrosaurus.atlasmountain
 ├── config    # Spring beans
 ├── common    # ApiResponse, ErrorCode, BusinessException
-├── web       # Filters, exception handlers
+├── web       # Filters, exception handlers, UserContextInterceptor
 ├── auth      # Auth feature (controller/service/dao/dao.impl/mapper/entity/dto/vo)
 ├── user      # User feature (controller/service/dao/dao.impl/mapper/entity/vo)
+├── system    # System endpoints (ping/demo controllers, no business logic)
 ├── cdc       # MySQL binlog CDC (config/engine/dispatcher/handler/event)
-└── infra     # persistence (MyBatis-Plus), redis (Redisson lock)
+└── infra     # persistence (MyBatis-Plus, UserContext), redis (Redisson lock)
 ```
 
 **Layer rules** (enforced by ArchUnit):

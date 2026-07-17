@@ -27,7 +27,7 @@ public class UserDaoImpl implements UserDao {
   @Override
   public Optional<UserEntity> findByUsername(String username) {
     LambdaQueryWrapper<UserEntity> wrapper =
-        new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, username).last("LIMIT 1");
+        new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, username);
     return Optional.ofNullable(userMapper.selectOne(wrapper));
   }
 }

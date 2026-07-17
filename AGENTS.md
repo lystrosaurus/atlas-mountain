@@ -127,11 +127,12 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local # 本地启动（需 MySQL 
 ```
 config    # Spring Bean（Jackson、MyBatis-Plus、Sa-Token、Web）
 common    # ApiResponse<T>、ErrorCode、BusinessException
-web       # GlobalExceptionHandler、RequestLogFilter
+web       # GlobalExceptionHandler、RequestLogFilter、UserContextInterceptor
 auth      # 认证模块（controller/service/dao/dao.impl/mapper/entity/dto/vo）
 user      # 用户模块（controller/service/dao/dao.impl/mapper/entity/vo）
+system    # 系统端点（ping/demo controllers，无业务逻辑）
 cdc       # MySQL binlog CDC（config/engine/dispatcher/handler/event）
-infra     # persistence（BaseEntity、AuditMetaObjectHandler）、redis（分布式锁）
+infra     # persistence（BaseEntity、AuditMetaObjectHandler）、context（UserContext）、redis（分布式锁）
 ops       # 运维占位
 ```
 

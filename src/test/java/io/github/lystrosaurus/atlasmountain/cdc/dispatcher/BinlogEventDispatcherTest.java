@@ -1,6 +1,7 @@
 package io.github.lystrosaurus.atlasmountain.cdc.dispatcher;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -80,6 +81,27 @@ class BinlogEventDispatcherTest {
         createEvent(EventType.DELETE_ROWS, createDeleteRows(Collections.emptyList())));
 
     verify(handler).onDelete(any());
+  }
+
+  @Test
+  void handlerFailureDoesNotBreakOtherHandlers() {
+    BinlogEventHandler failingHandler = mock(BinlogEventHandler.class);
+    BinlogEventHandler healthyHandler = mock(BinlogEventHandler.class);
+    when(failingHandler.supports("test_db", "users")).thenReturn(true);
+    when(healthyHandler.supports("test_db", "users")).thenReturn(true);
+    doThrow(new RuntimeException("boom")).when(failingHandler).onInsert(any());
+
+    BinlogEventDispatcher dispatcher =
+        new BinlogEventDispatcher(List.of(failingHandler, healthyHandler));
+
+    dispatcher.onEvent(createEvent(EventType.TABLE_MAP, createTableMap()));
+    ArrayList<Serializable[]> rows = new ArrayList<>();
+    rows.add(new Serializable[] {"alice"});
+    dispatcher.onEvent(createEvent(EventType.WRITE_ROWS, createWriteRows(rows)));
+
+    verify(failingHandler).onInsert(any());
+    // Healthy handler must still be invoked despite the earlier failure.
+    verify(healthyHandler).onInsert(any());
   }
 
   private Event createEvent(EventType type, EventData data) {

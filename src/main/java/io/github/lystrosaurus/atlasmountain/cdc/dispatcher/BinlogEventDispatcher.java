@@ -30,7 +30,7 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
       new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Long, TableMapEventData> eldest) {
-          return size() > TABLE_MAP_MAX_SIZE;
+          return size() >= TABLE_MAP_MAX_SIZE;
         }
       };
   private final List<BinlogEventHandler> handlers;
@@ -67,7 +67,8 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
         }
       }
     } catch (Exception e) {
-      log.error("Binlog event dispatch error", e);
+      EventType eventType = event.getHeader() != null ? event.getHeader().getEventType() : null;
+      log.error("Binlog event dispatch error: eventType={}", eventType, e);
     }
   }
 
@@ -85,29 +86,35 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
         InsertEvent insertEvent = new InsertEvent(database, table, mutation.getInsertRows());
         handlers.stream()
             .filter(h -> h.supports(database, table))
-            .forEach(h -> safeHandle(() -> h.onInsert(insertEvent)));
+            .forEach(h -> safeHandle(h, database, table, () -> h.onInsert(insertEvent)));
       }
       case UPDATE_ROWS, EXT_UPDATE_ROWS -> {
         UpdateEvent updateEvent = new UpdateEvent(database, table, mutation.getUpdateRows());
         handlers.stream()
             .filter(h -> h.supports(database, table))
-            .forEach(h -> safeHandle(() -> h.onUpdate(updateEvent)));
+            .forEach(h -> safeHandle(h, database, table, () -> h.onUpdate(updateEvent)));
       }
       case DELETE_ROWS, EXT_DELETE_ROWS -> {
         DeleteEvent deleteEvent = new DeleteEvent(database, table, mutation.getDeleteRows());
         handlers.stream()
             .filter(h -> h.supports(database, table))
-            .forEach(h -> safeHandle(() -> h.onDelete(deleteEvent)));
+            .forEach(h -> safeHandle(h, database, table, () -> h.onDelete(deleteEvent)));
       }
       default -> log.debug("Unhandled row mutation event type: {}", eventType);
     }
   }
 
-  private void safeHandle(Runnable action) {
+  private void safeHandle(
+      BinlogEventHandler handler, String database, String table, Runnable action) {
     try {
       action.run();
     } catch (Exception e) {
-      log.error("Handler error", e);
+      log.error(
+          "Binlog handler error: handler={}, database={}, table={}",
+          handler.getClass().getSimpleName(),
+          database,
+          table,
+          e);
     }
   }
 

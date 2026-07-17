@@ -3,8 +3,8 @@ spring:
     name: atlas-mountain
   datasource:
     url: jdbc:mysql://localhost:3306/atlas_mountain_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   flyway:
     enabled: true

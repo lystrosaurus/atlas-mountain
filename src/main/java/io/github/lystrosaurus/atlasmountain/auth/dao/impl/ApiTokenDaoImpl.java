@@ -22,9 +22,7 @@ public class ApiTokenDaoImpl implements ApiTokenDao {
   @Override
   public Optional<ApiTokenEntity> findByPrefix(String tokenPrefix) {
     LambdaQueryWrapper<ApiTokenEntity> wrapper =
-        new LambdaQueryWrapper<ApiTokenEntity>()
-            .eq(ApiTokenEntity::getTokenPrefix, tokenPrefix)
-            .last("LIMIT 1");
+        new LambdaQueryWrapper<ApiTokenEntity>().eq(ApiTokenEntity::getTokenPrefix, tokenPrefix);
     return Optional.ofNullable(apiTokenMapper.selectOne(wrapper));
   }
 }
