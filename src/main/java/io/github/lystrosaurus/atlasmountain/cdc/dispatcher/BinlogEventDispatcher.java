@@ -56,11 +56,11 @@ public class BinlogEventDispatcher implements BinaryLogClient.EventListener {
           }
         }
         case WRITE_ROWS,
-                EXT_WRITE_ROWS,
-                UPDATE_ROWS,
-                EXT_UPDATE_ROWS,
-                DELETE_ROWS,
-                EXT_DELETE_ROWS ->
+            EXT_WRITE_ROWS,
+            UPDATE_ROWS,
+            EXT_UPDATE_ROWS,
+            DELETE_ROWS,
+            EXT_DELETE_ROWS ->
             dispatchRowMutation(eventType, event);
         default -> {
           // ignore other event types
